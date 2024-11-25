@@ -1,4 +1,4 @@
-import { CommonMessage } from '~/constants/CommonMessage';
+import { CommonMessage } from '~/constants/Message';
 import { HttpStatus } from '~/constants/HttpStatus';
 
 export class CommonError {
