@@ -6,6 +6,10 @@ class UserDao {
     return await database.users.find().toArray();
   }
 
+  public async findByEmail(email: string) {
+    return await database.users.findOne({ email: email });
+  }
+
   public async insertUser(user: UserEntity) {
     return await database.users.insertOne(user);
   }

@@ -1,8 +1,8 @@
 import express from 'express';
 import 'reflect-metadata';
-import route from '~/routes';
 import database from '~/database';
 import { errorHandler } from '~/middlewares/error';
+import route from '~/routes';
 
 // define variable
 const app = express();

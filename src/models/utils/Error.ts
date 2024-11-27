@@ -1,23 +1,14 @@
-import { CommonMessage } from '~/constants/Message';
 import { HttpStatus } from '~/constants/HttpStatus';
+import { CommonMessage } from '~/constants/Message';
 
 export class CommonError {
   status: HttpStatus;
   message: CommonMessage;
-  details?: ErrorDetail[];
+  details?: any;
 
-  constructor(status: HttpStatus, message: CommonMessage) {
+  constructor(status: HttpStatus, message: CommonMessage, detail?: any) {
     this.status = status;
     this.message = message;
-  }
-}
-
-export class ErrorDetail {
-  field: string;
-  message: string;
-
-  constructor(field: string, message: string) {
-    this.field = field;
-    this.message = message;
+    this.details = detail;
   }
 }

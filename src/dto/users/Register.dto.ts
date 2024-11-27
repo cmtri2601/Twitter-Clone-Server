@@ -1,27 +1,45 @@
-import { Type } from 'class-transformer';
-import { IsNotEmpty, Length, MaxLength, ValidateNested } from 'class-validator';
+import { Expose } from 'class-transformer';
+import {
+  IsDateString,
+  IsEmail,
+  IsStrongPassword,
+  MaxLength,
+  ValidateIf
+} from 'class-validator';
+import { IsEmailAlreadyExist } from '~/decorators/IsEmailAlreadyExist';
+import { IsMatch } from '~/decorators/IsMatch';
 
 export class RegisterRequest {
-  @Length(10, 20)
-  username?: string;
+  @Expose()
+  @IsEmail()
+  @IsEmailAlreadyExist()
+  email?: string;
 
+  @Expose()
   @MaxLength(30)
   firstName?: string;
 
+  @Expose()
   @MaxLength(30)
   lastName?: string;
 
-  @IsNotEmpty()
+  @Expose()
+  @MaxLength(50)
+  @IsStrongPassword({
+    minLength: 6,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 1
+  })
   password?: string;
 
+  @Expose()
+  @IsMatch('password')
   confirmPassword?: string;
 
-  @ValidateNested()
-  @Type(() => SomeThing)
-  something?: SomeThing;
-}
-
-class SomeThing {
-  @IsNotEmpty()
-  name?: string;
+  @Expose()
+  @ValidateIf((object, value) => value)
+  @IsDateString()
+  dateOfBirth?: string;
 }

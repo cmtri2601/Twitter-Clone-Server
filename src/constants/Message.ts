@@ -9,3 +9,8 @@ export enum CommonMessage {
   UNPROCESSABLE_ENTITY = 'Unprocessable Entity',
   INTERNAL_SERVER_ERROR = 'Internal Server Error'
 }
+
+export enum UserMessage {
+  LOGIN = 'Login successfully',
+  CREATED = 'User created successfully'
+}

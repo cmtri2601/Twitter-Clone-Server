@@ -1,5 +1,5 @@
 import { Collection, MongoClient, ServerApiVersion } from 'mongodb';
-import User from '~/models/schemas/user.schema';
+import { User } from '~/models/schemas/user.schema';
 
 class DataBase {
   private client;

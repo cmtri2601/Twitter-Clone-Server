@@ -1,34 +1,41 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
+import { HttpStatus } from '~/constants/HttpStatus';
+import { UserMessage } from '~/constants/Message';
 import userService from '~/services/user.service';
 
 class UserController {
+  /**
+   * Retrieves all users.
+   * @returns A promise that resolves to the list of users.
+   */
   public findAll = async (req: Request, res: Response, next: NextFunction) => {
     const result = await userService.findAll();
     console.log(result);
     res.json(result);
   };
 
+  /**
+   * Registers a new user.
+   * @returns A promise that resolves to the registered user.
+   */
   public register = async (req: Request, res: Response, next: NextFunction) => {
-    const user = {
-      username: 'username',
-      password: 'password',
-      email: 'email',
-      firstName: 'firstName',
-      lastName: 'lastName',
-      verifyToken: 'verifyToken',
-      resetPasswordToken: 'resetPasswordToken',
-      createAt: new Date(),
-      updateAt: new Date()
-    };
-    const result = await userService.register(user);
-    res.json(result);
+    await userService.register(req.body);
+    res.status(HttpStatus.CREATED).send(UserMessage.CREATED);
   };
 
+  /**
+   * Logs in a user.
+   * @returns A promise that resolves to the logged in user
+   */
   public login = async (req: Request, res: Response, next: NextFunction) => {
     throw new Error('login failed');
     res.send('login successfully');
   };
 
+  /**
+   * Logs out a user.
+   * @returns A promise that resolves to a message indicating that the user has been logged out.
+   */
   public logout = (req: Request, res: Response, next: NextFunction) => {
     res.send('logout successfully');
   };
