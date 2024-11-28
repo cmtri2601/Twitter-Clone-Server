@@ -1,14 +1,14 @@
 import { HttpStatus } from '~/constants/HttpStatus';
 import { CommonMessage } from '~/constants/Message';
 
-export class ApplicationError {
-  status: HttpStatus;
+export class ApplicationResponse {
   message: CommonMessage;
   details?: any;
+  data?: any;
 
-  constructor(status: HttpStatus, message: CommonMessage, detail?: any) {
-    this.status = status;
+  constructor(message: CommonMessage, details?: any, data?: any) {
     this.message = message;
-    this.details = detail;
+    this.details = details;
+    this.data = data;
   }
 }

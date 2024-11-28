@@ -1,9 +1,12 @@
-import userDao from '~/database/user.dao';
-import { UserEntity, User } from '~/models/schemas/user.schema';
+import userDao from '~/database/User.dao';
+import { UserEntity, User } from '~/models/schemas/User.schema';
 import hash from '~/utils/crypto';
 import { sign, verify } from './../utils/jwt';
 import { UserStatus } from '~/constants/UserStatus';
 import { TokenType } from '~/constants/TokenType';
+import { omit } from 'lodash';
+import refreshTokenDao from '~/database/RefreshToken.dao';
+import { RefreshTokenEntity } from '~/models/schemas/RefreshToken.schema';
 
 class UserService {
   /**
@@ -15,22 +18,38 @@ class UserService {
     // hash password
     const hashPassword = hash(user.password);
     user.password = hashPassword;
+    // TODO: delete
+    console.log(user);
+
+    // save user
+    const userEntity = new UserEntity(user);
+    const { insertedId: userId } = await userDao.insertUser(userEntity);
+    // TODO: delete
+    console.log(userEntity);
 
     // create jwt
-
-    // create token
     const [accessToken, refreshToken] = await this.signAccessAndRefreshToken(
-      user,
+      omit(user, ['confirmPassword']) as User,
       UserStatus.UNVERIFIED
     );
 
-    // TODO:
-    console.log('access token: \n', accessToken);
-    console.log('refresh token: \n', refreshToken);
+    // save refresh token
+    const { iat, exp } = await this.decodeRefreshToken(refreshToken as string);
+    const refreshTokenEntity = new RefreshTokenEntity({
+      user_id: userId,
+      token: refreshToken,
+      iat: iat as number,
+      exp: exp as number
+    });
+    refreshTokenDao.insertRefreshToken(refreshTokenEntity);
 
-    // save user
-    const entity = new UserEntity(user);
-    return userDao.insertUser(entity);
+    // send verified email
+
+    // return
+    return {
+      accessToken,
+      refreshToken
+    };
   };
 
   public findAll = () => {
@@ -76,6 +95,16 @@ class UserService {
       this.signAccessToken(user, status),
       this.signRefreshToken(user, status)
     ]);
+  };
+
+  /**
+   * Decode refresh token from payload
+   * @param user
+   * @param status
+   * @returns Promise<string> token
+   */
+  private decodeRefreshToken = (token: string) => {
+    return verify(token, process.env.JWT_REFRESH_TOKEN_KEY as string);
   };
 }
 

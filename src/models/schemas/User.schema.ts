@@ -8,10 +8,10 @@ export interface User {
   lastName: string;
 
   verifyToken: string;
-  resetPasswordToken: string;
+  resetPasswordToken?: string;
 
-  createAt: string;
-  updateAt: string;
+  createAt?: string;
+  updateAt?: string;
 
   bio?: string;
   location?: string;
@@ -29,7 +29,7 @@ export class UserEntity {
   last_name: string;
 
   verify_token: string;
-  reset_password_token: string;
+  reset_password_token?: string;
 
   create_at: Date;
   update_at: Date;

@@ -1,5 +1,5 @@
 import database from '.';
-import { UserEntity } from '~/models/schemas/user.schema';
+import { UserEntity } from '~/models/schemas/User.schema';
 
 class UserDao {
   public async findAll() {
@@ -10,8 +10,8 @@ class UserDao {
     return await database.users.findOne({ email: email });
   }
 
-  public async insertUser(user: UserEntity) {
-    return await database.users.insertOne(user);
+  public async insertUser(entity: UserEntity) {
+    return await database.users.insertOne(entity);
   }
 }
 

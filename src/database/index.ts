@@ -1,5 +1,6 @@
 import { Collection, MongoClient, ServerApiVersion } from 'mongodb';
-import { User } from '~/models/schemas/user.schema';
+import { RefreshTokenEntity } from '~/models/schemas/RefreshToken.schema';
+import { UserEntity } from '~/models/schemas/User.schema';
 
 class DataBase {
   private client;
@@ -17,6 +18,9 @@ class DataBase {
     this.db = this.client.db(databaseName);
   }
 
+  /**
+   * Run database
+   */
   async run() {
     try {
       // Connect the client to the server	(optional starting in v4.7)
@@ -32,13 +36,25 @@ class DataBase {
     }
   }
 
-  get users(): Collection<User> {
+  /**
+   * get users collection
+   */
+  get users(): Collection<UserEntity> {
     return this.db.collection('users');
+  }
+
+  /**
+   * get refresh_token collection
+   */
+  get refreshTokens(): Collection<RefreshTokenEntity> {
+    return this.db.collection('refresh_token');
   }
 }
 
+// init uri
 const uri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@study.ifaon.mongodb.net/?retryWrites=true&w=majority&appName=Study`;
 
+// create database
 const database = new DataBase(uri, process.env.MONGO_DATABASE);
 
 export default database;

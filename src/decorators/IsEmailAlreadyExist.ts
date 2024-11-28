@@ -5,7 +5,7 @@ import {
   ValidatorConstraintInterface,
   ValidationArguments
 } from 'class-validator';
-import userDao from '~/database/user.dao';
+import userDao from '~/database/User.dao';
 
 @ValidatorConstraint({ async: true })
 export class IsEmailAlreadyExistConstraint

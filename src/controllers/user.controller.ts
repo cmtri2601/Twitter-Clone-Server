@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { HttpStatus } from '~/constants/HttpStatus';
-import { UserMessage } from '~/constants/Message';
+import { UserMessage, CommonMessage } from '~/constants/Message';
+import { ApplicationResponse } from '~/models/utils/Response';
 import userService from '~/services/user.service';
 
 class UserController {
@@ -19,8 +20,16 @@ class UserController {
    * @returns A promise that resolves to the registered user.
    */
   public register = async (req: Request, res: Response, next: NextFunction) => {
-    await userService.register(req.body);
-    res.status(HttpStatus.CREATED).send(UserMessage.CREATED);
+    const data = await userService.register(req.body);
+    res
+      .status(HttpStatus.CREATED)
+      .send(
+        new ApplicationResponse(
+          CommonMessage.CREATED,
+          UserMessage.CREATED,
+          data
+        )
+      );
   };
 
   /**
