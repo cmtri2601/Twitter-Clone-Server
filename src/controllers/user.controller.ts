@@ -21,15 +21,12 @@ class UserController {
    */
   public register = async (req: Request, res: Response, next: NextFunction) => {
     const data = await userService.register(req.body);
-    res
-      .status(HttpStatus.CREATED)
-      .send(
-        new ApplicationResponse(
-          CommonMessage.CREATED,
-          UserMessage.CREATED,
-          data
-        )
-      );
+    const response = new ApplicationResponse({
+      message: CommonMessage.CREATED,
+      detail: UserMessage.CREATED,
+      data
+    });
+    res.status(HttpStatus.CREATED).json(response);
   };
 
   /**
@@ -37,8 +34,25 @@ class UserController {
    * @returns A promise that resolves to the logged in user
    */
   public login = async (req: Request, res: Response, next: NextFunction) => {
-    throw new Error('login failed');
-    res.send('login successfully');
+    const data = await userService.login(req.body);
+
+    // check result
+    if (data.errors === UserMessage.LOGIN_FAIL) {
+      // case login fail
+      const response = new ApplicationResponse({
+        message: CommonMessage.UNAUTHORIZED,
+        errors: data.errors
+      });
+      res.status(HttpStatus.UNAUTHORIZED).json(response);
+    } else {
+      // case login success
+      const response = new ApplicationResponse({
+        message: CommonMessage.SUCCESS,
+        detail: UserMessage.LOGIN_SUCCESS,
+        data
+      });
+      res.status(HttpStatus.SUCCESS).json(response);
+    }
   };
 
   /**

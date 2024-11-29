@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { HttpStatus } from '~/constants/HttpStatus';
 import { CommonMessage } from '~/constants/Message';
 import { ApplicationError } from '~/models/utils/Error';
+import { ApplicationResponse } from '~/models/utils/Response';
 
 /**
  * Handle error from the application
@@ -17,10 +18,15 @@ export const errorHandler = (
   next: NextFunction
 ) => {
   if (error instanceof ApplicationError) {
-    res
-      .status(error.status)
-      .json({ message: error.message, details: error?.details });
+    // catch error that is PREDICTABLE
+    const response = new ApplicationResponse({
+      message: error.message,
+      errors: error.errors
+    });
+    res.status(error.status).json(response);
   } else {
+    // catch error that is UNPREDICTABLE
+
     // TODO: delete
     console.error(error);
 
@@ -29,9 +35,11 @@ export const errorHandler = (
       enumerable: true
     });
 
-    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+    const response = new ApplicationResponse({
       message: CommonMessage.INTERNAL_SERVER_ERROR,
-      details: error
+      errors: error
     });
+
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(response);
   }
 };

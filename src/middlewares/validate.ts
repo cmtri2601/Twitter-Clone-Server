@@ -24,13 +24,13 @@ const validateRequest =
       const errors = await validate(dto);
       if (errors.length > 0) {
         // create error detail
-        const details = filterValidationError(errors);
+        const conciseErrors = filterValidationError(errors);
 
         // create error
         const error = new ApplicationError(
           HttpStatus.UNPROCESSABLE_ENTITY,
           CommonMessage.UNPROCESSABLE_ENTITY,
-          details
+          conciseErrors
         );
 
         // push error to error handler

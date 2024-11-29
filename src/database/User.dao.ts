@@ -7,7 +7,11 @@ class UserDao {
   }
 
   public async findByEmail(email: string) {
-    return await database.users.findOne({ email: email });
+    return await database.users.findOne({ email });
+  }
+
+  public async findByEmailAndPassword(email: string, password: string) {
+    return await database.users.findOne({ email, password });
   }
 
   public async insertUser(entity: UserEntity) {

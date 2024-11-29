@@ -11,6 +11,7 @@ export enum CommonMessage {
 }
 
 export enum UserMessage {
-  LOGIN = 'Login successfully',
-  CREATED = 'User created successfully'
+  CREATED = 'User created successfully',
+  LOGIN_SUCCESS = 'Login successfully',
+  LOGIN_FAIL = 'Email or password is incorrect'
 }

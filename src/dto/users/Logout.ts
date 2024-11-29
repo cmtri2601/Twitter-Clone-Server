@@ -1,7 +1,7 @@
 import { Expose } from 'class-transformer';
 import { IsEmail, MaxLength, MinLength } from 'class-validator';
 
-export class LoginRequest {
+export class RegisterRequest {
   @Expose()
   @IsEmail()
   email?: string;

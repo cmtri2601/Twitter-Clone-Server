@@ -4,11 +4,11 @@ import { CommonMessage } from '~/constants/Message';
 export class ApplicationError {
   status: HttpStatus;
   message: CommonMessage;
-  details?: any;
+  errors?: any;
 
-  constructor(status: HttpStatus, message: CommonMessage, detail?: any) {
+  constructor(status: HttpStatus, message: CommonMessage, errors?: any) {
     this.status = status;
     this.message = message;
-    this.details = detail;
+    this.errors = errors;
   }
 }

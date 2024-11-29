@@ -1,21 +1,18 @@
 import {
   registerDecorator,
+  ValidationArguments,
   ValidationOptions,
   ValidatorConstraint,
-  ValidatorConstraintInterface,
-  ValidationArguments
+  ValidatorConstraintInterface
 } from 'class-validator';
-import userDao from '~/database/User.dao';
+import userService from '~/services/user.service';
 
 @ValidatorConstraint({ async: true })
 export class IsEmailAlreadyExistConstraint
   implements ValidatorConstraintInterface
 {
-  validate(email: any, args: ValidationArguments) {
-    return userDao.findByEmail(email).then((user) => {
-      if (user) return false;
-      return true;
-    });
+  async validate(email: any) {
+    return userService.isEmailAlreadyExist(email);
   }
 
   defaultMessage(args: ValidationArguments) {

@@ -7,29 +7,27 @@ import { TokenType } from '~/constants/TokenType';
 import { omit } from 'lodash';
 import refreshTokenDao from '~/database/RefreshToken.dao';
 import { RefreshTokenEntity } from '~/models/schemas/RefreshToken.schema';
+import { UserMessage } from '~/constants/Message';
+import { ObjectId } from 'mongodb';
 
 class UserService {
   /**
-   * Register user service
+   * Register new user
    * @param user
-   * @returns
+   * @returns access token && refreshToken
    */
   public register = async (user: User) => {
     // hash password
     const hashPassword = hash(user.password);
     user.password = hashPassword;
-    // TODO: delete
-    console.log(user);
 
     // save user
     const userEntity = new UserEntity(user);
     const { insertedId: userId } = await userDao.insertUser(userEntity);
-    // TODO: delete
-    console.log(userEntity);
 
     // create jwt
     const [accessToken, refreshToken] = await this.signAccessAndRefreshToken(
-      omit(user, ['confirmPassword']) as User,
+      userId,
       UserStatus.UNVERIFIED
     );
 
@@ -52,8 +50,69 @@ class UserService {
     };
   };
 
+  /**
+   * Login user
+   * @param user
+   * @returns access token && refreshToken
+   */
+  public login = async (user: User) => {
+    // hash password
+    const hashPassword = hash(user.password);
+    user.password = hashPassword;
+
+    // find user
+    const userEntity = await userDao.findByEmailAndPassword(
+      user.email,
+      hashPassword
+    );
+
+    // check user
+    if (!userEntity) {
+      return {
+        errors: UserMessage.LOGIN_FAIL
+      };
+    }
+
+    // create jwt
+    const [accessToken, refreshToken] = await this.signAccessAndRefreshToken(
+      userEntity._id,
+      UserStatus.UNVERIFIED
+    );
+
+    // save refresh token
+    const { iat, exp } = await this.decodeRefreshToken(refreshToken as string);
+    const refreshTokenEntity = new RefreshTokenEntity({
+      user_id: userEntity._id,
+      token: refreshToken,
+      iat: iat as number,
+      exp: exp as number
+    });
+    refreshTokenDao.insertRefreshToken(refreshTokenEntity);
+
+    // return
+    return {
+      accessToken,
+      refreshToken
+    };
+  };
+
+  /**
+   * Find all user in database
+   * @returns list users
+   */
   public findAll = () => {
     return userDao.findAll();
+  };
+
+  /**
+   * Find user by email and check email already exist
+   * @returns list users
+   */
+  public isEmailAlreadyExist = async (email: string) => {
+    return userDao.findByEmail(email).then((user) => {
+      if (user) return false;
+      return true;
+    });
   };
 
   /**
@@ -62,9 +121,9 @@ class UserService {
    * @param status
    * @returns Promise<string> token
    */
-  private signAccessToken = (user: User, status: UserStatus) => {
+  private signAccessToken = (userId: ObjectId, status: UserStatus) => {
     return sign(
-      { user, type: TokenType.AccessToken, status },
+      { userId, type: TokenType.AccessToken, status },
       process.env.JWT_ACCESS_TOKEN_KEY as string,
       { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN as string }
     );
@@ -76,12 +135,22 @@ class UserService {
    * @param status
    * @returns Promise<string> token
    */
-  private signRefreshToken = (user: User, status: UserStatus) => {
-    return sign(
-      { user, type: TokenType.RefreshToken, status },
-      process.env.JWT_REFRESH_TOKEN_KEY as string,
-      { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as string }
-    );
+  private signRefreshToken = (
+    userId: ObjectId,
+    status: UserStatus,
+    exp?: number
+  ) => {
+    return exp
+      ? sign(
+          { userId, type: TokenType.RefreshToken, status, exp },
+          process.env.JWT_REFRESH_TOKEN_KEY as string,
+          { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as string }
+        )
+      : sign(
+          { userId, type: TokenType.RefreshToken, status },
+          process.env.JWT_REFRESH_TOKEN_KEY as string,
+          { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as string }
+        );
   };
 
   /**
@@ -90,10 +159,13 @@ class UserService {
    * @param status
    * @returns [Promise<string>] tokens
    */
-  private signAccessAndRefreshToken = (user: User, status: UserStatus) => {
+  private signAccessAndRefreshToken = (
+    userId: ObjectId,
+    status: UserStatus
+  ) => {
     return Promise.all([
-      this.signAccessToken(user, status),
-      this.signRefreshToken(user, status)
+      this.signAccessToken(userId, status),
+      this.signRefreshToken(userId, status)
     ]);
   };
 

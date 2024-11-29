@@ -2,18 +2,18 @@ import { ValidationError } from 'class-validator';
 
 /**
  * Filter validation error from class-validator to a flat array of string
- * @param details
+ * @param errors
  * @param parent
  * @returns string[]
  */
 const filterValidationError = (
-  details: ValidationError[],
+  errors: ValidationError[],
   parent: string = ''
 ): any[] => {
   // TODO: delete
-  // console.log(details);
+  // console.log(errors);
 
-  const result = details.map((detail) => {
+  const result = errors.map((detail) => {
     let propertyErrors: any[] = [];
     let childErrors: any[] = [];
     const prefix = parent ? `${parent}.` : '';
