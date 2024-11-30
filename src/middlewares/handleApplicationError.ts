@@ -31,9 +31,11 @@ export const errorHandler = (
     console.error(error);
 
     // message and stack default not enumerable, but application just need message to expose
-    Object.defineProperty(error, 'message', {
-      enumerable: true
-    });
+    if (typeof error === 'object') {
+      Object.defineProperty(error, 'message', {
+        enumerable: true
+      });
+    }
 
     const response = new ApplicationResponse({
       message: CommonMessage.INTERNAL_SERVER_ERROR,

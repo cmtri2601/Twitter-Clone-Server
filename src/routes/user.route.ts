@@ -5,7 +5,7 @@ import { LoginRequest } from '~/dto/users/Login.dto';
 import { RegisterRequest } from '~/dto/users/Register.dto';
 import validateAuthorization from '~/middlewares/validateAuthorization';
 import validateRequest from '~/middlewares/validateRequest';
-import asyncErrorHandler from '~/utils/wrap';
+import asyncErrorHandler from '~/middlewares/asyncErrorHandler';
 
 const route = Router();
 

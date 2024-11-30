@@ -7,7 +7,7 @@ import {
   ValidateNested
 } from 'class-validator';
 
-export class RegisterRequest {
+export class ExampleRequest {
   @Expose()
   @Length(10, 20)
   username?: string;
