@@ -37,7 +37,7 @@ class UserController {
     const data = await userService.login(req.body);
 
     // check result
-    if (data.errors === UserMessage.LOGIN_FAIL) {
+    if (data?.errors === UserMessage.LOGIN_FAIL) {
       // case login fail
       const response = new ApplicationResponse({
         message: CommonMessage.UNAUTHORIZED,
@@ -53,6 +53,24 @@ class UserController {
       });
       res.status(HttpStatus.SUCCESS).json(response);
     }
+  };
+
+  /**
+   * Refreshes a user's token.
+   * @returns A promise that resolves to the refreshed token.
+   */
+  public refreshToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const data = await userService.refreshToken(req.authorization);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      detail: UserMessage.REFRESH_TOKEN_SUCCESS,
+      data
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
   };
 
   /**

@@ -9,6 +9,7 @@ import refreshTokenDao from '~/database/RefreshToken.dao';
 import { RefreshTokenEntity } from '~/models/schemas/RefreshToken.schema';
 import { UserMessage } from '~/constants/Message';
 import { ObjectId } from 'mongodb';
+import Authorization from '~/models/utils/Authorization';
 
 class UserService {
   /**
@@ -26,28 +27,15 @@ class UserService {
     const { insertedId: userId } = await userDao.insertUser(userEntity);
 
     // create jwt
-    const [accessToken, refreshToken] = await this.signAccessAndRefreshToken(
+    const tokens = await this.signAccessAndRefreshToken(
       userId,
       UserStatus.UNVERIFIED
     );
 
-    // save refresh token
-    const { iat, exp } = await this.decodeRefreshToken(refreshToken as string);
-    const refreshTokenEntity = new RefreshTokenEntity({
-      user_id: userId,
-      token: refreshToken,
-      iat: iat as number,
-      exp: exp as number
-    });
-    refreshTokenDao.insertRefreshToken(refreshTokenEntity);
-
     // send verified email
 
     // return
-    return {
-      accessToken,
-      refreshToken
-    };
+    return tokens;
   };
 
   /**
@@ -55,7 +43,13 @@ class UserService {
    * @param user
    * @returns access token && refreshToken
    */
-  public login = async (user: User) => {
+  public login = async (
+    user: User
+  ): Promise<{
+    errors?: UserMessage;
+    accessToken?: string;
+    refreshToken?: string;
+  }> => {
     // hash password
     const hashPassword = hash(user.password);
     user.password = hashPassword;
@@ -74,26 +68,32 @@ class UserService {
     }
 
     // create jwt
-    const [accessToken, refreshToken] = await this.signAccessAndRefreshToken(
+    const tokens = await this.signAccessAndRefreshToken(
       userEntity._id,
       UserStatus.UNVERIFIED
     );
 
-    // save refresh token
-    const { iat, exp } = await this.decodeRefreshToken(refreshToken as string);
-    const refreshTokenEntity = new RefreshTokenEntity({
-      user_id: userEntity._id,
-      token: refreshToken,
-      iat: iat as number,
-      exp: exp as number
-    });
-    refreshTokenDao.insertRefreshToken(refreshTokenEntity);
+    // return
+    return tokens;
+  };
+
+  /**
+   * Refresh token
+   * @param user
+   * @returns access token && refreshToken
+   */
+  public refreshToken = async (authorization: Authorization) => {
+    // delete old refresh token
+    await refreshTokenDao.deleteToken(authorization.refreshToken as string);
+
+    // create jwt
+    const tokens = await this.signAccessAndRefreshToken(
+      authorization.userId as ObjectId,
+      authorization.status as UserStatus
+    );
 
     // return
-    return {
-      accessToken,
-      refreshToken
-    };
+    return tokens;
   };
 
   /**
@@ -145,11 +145,13 @@ class UserService {
           { userId, type: TokenType.RefreshToken, status, exp },
           process.env.JWT_REFRESH_TOKEN_KEY as string,
           { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as string }
+          // { expiresIn: '5s' } // TODO: for testing
         )
       : sign(
           { userId, type: TokenType.RefreshToken, status },
           process.env.JWT_REFRESH_TOKEN_KEY as string,
           { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as string }
+          // { expiresIn: '5s' } // TODO: for testing
         );
   };
 
@@ -159,24 +161,34 @@ class UserService {
    * @param status
    * @returns [Promise<string>] tokens
    */
-  private signAccessAndRefreshToken = (
+  private signAccessAndRefreshToken = async (
     userId: ObjectId,
-    status: UserStatus
+    status: UserStatus,
+    exp?: number
   ) => {
-    return Promise.all([
+    // sign jwt
+    const [accessToken, refreshToken] = await Promise.all([
       this.signAccessToken(userId, status),
-      this.signRefreshToken(userId, status)
+      this.signRefreshToken(userId, status, exp)
     ]);
-  };
 
-  /**
-   * Decode refresh token from payload
-   * @param user
-   * @param status
-   * @returns Promise<string> token
-   */
-  private decodeRefreshToken = (token: string) => {
-    return verify(token, process.env.JWT_REFRESH_TOKEN_KEY as string);
+    // decode to get iat and exp
+    const decoded = await verify(
+      refreshToken as string,
+      process.env.JWT_REFRESH_TOKEN_KEY as string
+    );
+
+    // save refresh token
+    const refreshTokenEntity = new RefreshTokenEntity({
+      user_id: userId,
+      token: refreshToken,
+      iat: decoded.iat as number,
+      exp: decoded.exp as number
+    });
+    refreshTokenDao.insertRefreshToken(refreshTokenEntity);
+
+    // return
+    return { accessToken, refreshToken };
   };
 }
 

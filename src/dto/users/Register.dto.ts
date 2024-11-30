@@ -2,9 +2,9 @@ import { Expose } from 'class-transformer';
 import {
   IsDateString,
   IsEmail,
+  IsOptional,
   IsStrongPassword,
-  MaxLength,
-  ValidateIf
+  MaxLength
 } from 'class-validator';
 import { IsEmailAlreadyExist } from '~/decorators/IsEmailAlreadyExist';
 import { IsMatch } from '~/decorators/IsMatch';
@@ -39,7 +39,7 @@ export class RegisterRequest {
   confirmPassword?: string;
 
   @Expose()
-  @ValidateIf((object, value) => value)
-  @IsDateString()
+  @IsOptional()
+  @IsDateString({ strict: true, strictSeparator: true })
   dateOfBirth?: string;
 }

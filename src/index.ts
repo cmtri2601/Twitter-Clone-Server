@@ -1,7 +1,7 @@
 import express from 'express';
 import 'reflect-metadata';
 import database from '~/database';
-import { errorHandler } from '~/middlewares/error';
+import { errorHandler } from '~/middlewares/handleApplicationError';
 import route from '~/routes';
 
 // define variable

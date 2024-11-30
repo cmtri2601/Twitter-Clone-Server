@@ -13,5 +13,8 @@ export enum CommonMessage {
 export enum UserMessage {
   CREATED = 'User created successfully',
   LOGIN_SUCCESS = 'Login successfully',
-  LOGIN_FAIL = 'Email or password is incorrect'
+  LOGIN_FAIL = 'Email or password is incorrect',
+  REFRESH_TOKEN_REQUIRED = 'Refresh token is required',
+  REFRESH_TOKEN_NOT_EXISTED = 'Refresh token is not existed',
+  REFRESH_TOKEN_SUCCESS = 'Refresh token successfully'
 }

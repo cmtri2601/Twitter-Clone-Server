@@ -1,8 +1,10 @@
 import { Router } from 'express';
+import { AuthorizationType } from '~/constants/AuthorizationType';
 import userController from '~/controllers/user.controller';
 import { LoginRequest } from '~/dto/users/Login.dto';
 import { RegisterRequest } from '~/dto/users/Register.dto';
-import validateRequest from '~/middlewares/validate';
+import validateAuthorization from '~/middlewares/validateAuthorization';
+import validateRequest from '~/middlewares/validateRequest';
 import asyncErrorHandler from '~/utils/wrap';
 
 const route = Router();
@@ -37,10 +39,25 @@ route.post(
 );
 
 /**
+ * Description: Refreshes a user's token.
+ * Path: users/refresh-token
+ * Method: POST
+ */
+route.post(
+  '/refresh-token',
+  validateAuthorization(AuthorizationType.REFRESH_TOKEN),
+  asyncErrorHandler(userController.refreshToken)
+);
+
+/**
  * Description: Logs out a user.
  * Path: users/logout
  * Method: POST
  */
-route.post('/logout', asyncErrorHandler(userController.logout));
+route.post(
+  '/logout',
+  validateAuthorization(AuthorizationType.ACCESS_TOKEN_AND_REFRESH_TOKEN),
+  asyncErrorHandler(userController.logout)
+);
 
 export default route;
