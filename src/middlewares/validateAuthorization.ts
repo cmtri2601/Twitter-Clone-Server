@@ -16,7 +16,7 @@ import { verify } from '~/utils/jwt';
 const validateAuthorization =
   (type: AuthorizationType = AuthorizationType.ACCESS_TOKEN) =>
   async (req: Request, res: Response, next: NextFunction) => {
-    const accessToken = req.headers.authorization;
+    const accessToken = req.headers.authorization?.split(' ')[1];
     const refreshToken = req.body.refreshToken;
     const authorization: Authorization = {};
 
@@ -26,19 +26,47 @@ const validateAuthorization =
       type === AuthorizationType.ACCESS_TOKEN_AND_REFRESH_TOKEN
     ) {
       console.log('Access token ', accessToken);
+
+      // case: req header doesn't have access token
       if (!accessToken) {
-        console.log('Access token is required');
+        return next(
+          new ApplicationError(
+            HttpStatus.UNAUTHORIZED,
+            CommonMessage.UNAUTHORIZED,
+            UserMessage.ACCESS_TOKEN_REQUIRED
+          )
+        );
       }
 
-      // const decoded = await verify(
-      //   accessToken as string,
-      //   process.env.JWT_ACCESS_TOKEN_KEY as string
-      // );
+      try {
+        const decoded = await verify(
+          accessToken as string,
+          process.env.JWT_ACCESS_TOKEN_KEY as string
+        );
 
-      // if (!decoded) {
-      //   console.log('Access token is invalid');
-      //   console.log('Access token is expire');
-      // }
+        // case: access token is valid -> set value to authorization object
+        authorization.userId = decoded.userId;
+        authorization.status = decoded.status;
+      } catch (error) {
+        if (error instanceof JsonWebTokenError) {
+          // case: access token is invalid
+          return next(
+            new ApplicationError(
+              HttpStatus.UNAUTHORIZED,
+              CommonMessage.UNAUTHORIZED,
+              error.message
+            )
+          );
+        }
+        // case: unknown error
+        return next(
+          new ApplicationError(
+            HttpStatus.UNAUTHORIZED,
+            CommonMessage.UNAUTHORIZED,
+            (error as any).message
+          )
+        );
+      }
     }
 
     // validate refresh token
@@ -108,4 +136,5 @@ const validateAuthorization =
     req.authorization = authorization;
     next();
   };
+
 export default validateAuthorization;

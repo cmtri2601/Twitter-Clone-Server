@@ -77,8 +77,13 @@ class UserController {
    * Logs out a user.
    * @returns A promise that resolves to a message indicating that the user has been logged out.
    */
-  public logout = (req: Request, res: Response, next: NextFunction) => {
-    res.send('logout successfully');
+  public logout = async (req: Request, res: Response, next: NextFunction) => {
+    await userService.logout(req.authorization);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      detail: UserMessage.LOGOUT_SUCCESS
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
   };
 }
 

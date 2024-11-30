@@ -97,6 +97,18 @@ class UserService {
   };
 
   /**
+   * Logout user
+   * @param user
+   * @returns access token && refreshToken
+   */
+  public logout = async (authorization: Authorization) => {
+    // delete old refresh token
+    return await refreshTokenDao.deleteToken(
+      authorization.refreshToken as string
+    );
+  };
+
+  /**
    * Find all user in database
    * @returns list users
    */
@@ -126,6 +138,7 @@ class UserService {
       { userId, type: TokenType.AccessToken, status },
       process.env.JWT_ACCESS_TOKEN_KEY as string,
       { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN as string }
+      // { expiresIn: '5s' } // TODO: for testing
     );
   };
 

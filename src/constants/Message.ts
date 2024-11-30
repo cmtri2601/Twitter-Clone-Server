@@ -14,6 +14,8 @@ export enum UserMessage {
   CREATED = 'User created successfully',
   LOGIN_SUCCESS = 'Login successfully',
   LOGIN_FAIL = 'Email or password is incorrect',
+  LOGOUT_SUCCESS = 'Logout successfully',
+  ACCESS_TOKEN_REQUIRED = 'Access token is required',
   REFRESH_TOKEN_REQUIRED = 'Refresh token is required',
   REFRESH_TOKEN_NOT_EXISTED = 'Refresh token is not existed',
   REFRESH_TOKEN_SUCCESS = 'Refresh token successfully'
