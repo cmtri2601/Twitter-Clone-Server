@@ -1,15 +1,14 @@
+import { ObjectId } from 'mongodb';
+import { UserMessage } from '~/constants/Message';
+import { TokenType } from '~/constants/TokenType';
+import { UserStatus } from '~/constants/UserStatus';
+import refreshTokenDao from '~/database/RefreshToken.dao';
 import userDao from '~/database/User.dao';
-import { UserEntity, User } from '~/models/schemas/User.schema';
+import { RefreshTokenEntity } from '~/models/schemas/RefreshToken.schema';
+import { User, UserEntity } from '~/models/schemas/User.schema';
+import Authorization from '~/models/utils/Authorization';
 import hash from '~/utils/crypto';
 import { sign, verify } from './../utils/jwt';
-import { UserStatus } from '~/constants/UserStatus';
-import { TokenType } from '~/constants/TokenType';
-import { omit } from 'lodash';
-import refreshTokenDao from '~/database/RefreshToken.dao';
-import { RefreshTokenEntity } from '~/models/schemas/RefreshToken.schema';
-import { UserMessage } from '~/constants/Message';
-import { ObjectId } from 'mongodb';
-import Authorization from '~/models/utils/Authorization';
 
 class UserService {
   /**
@@ -18,21 +17,35 @@ class UserService {
    * @returns access token && refreshToken
    */
   public register = async (user: User) => {
-    // hash password
-    const hashPassword = hash(user.password);
-    user.password = hashPassword;
+    // create id
+    const _id = new ObjectId();
 
-    // save user
-    const userEntity = new UserEntity(user);
-    const { insertedId: userId } = await userDao.insertUser(userEntity);
-
-    // create jwt
-    const tokens = await this.signAccessAndRefreshToken(
-      userId,
+    // create verify email token
+    const verifyEmailToken = await this.signVerifyEmailToken(
+      _id,
       UserStatus.UNVERIFIED
     );
 
-    // send verified email
+    // hash password
+    const hashPassword = hash(user.password);
+
+    // save user
+    const userEntity = new UserEntity({
+      ...user,
+      _id,
+      password: hashPassword,
+      verifyEmailToken
+    });
+    await userDao.insertUser(userEntity);
+
+    // create access and refresh token
+    const tokens = await this.signAccessAndRefreshToken(
+      _id,
+      UserStatus.UNVERIFIED
+    );
+
+    // TODO: send verify email - FAKE (replace with real send email later)
+    console.log('Verify email token:', verifyEmailToken);
 
     // return
     return tokens;
@@ -79,7 +92,7 @@ class UserService {
 
   /**
    * Refresh token
-   * @param user
+   * @param authorization
    * @returns access token && refreshToken
    */
   public refreshToken = async (authorization: Authorization) => {
@@ -98,7 +111,7 @@ class UserService {
 
   /**
    * Logout user
-   * @param user
+   * @param authorization
    * @returns access token && refreshToken
    */
   public logout = async (authorization: Authorization) => {
@@ -106,6 +119,22 @@ class UserService {
     return await refreshTokenDao.deleteToken(
       authorization.refreshToken as string
     );
+  };
+
+  /**
+   * Verify email token
+   * @param authorization
+   * @returns
+   */
+  public verifyEmail = async (authorization: Authorization) => {
+    // update user status
+    const result = await userDao.updateUserStatus(
+      authorization.userId as ObjectId,
+      UserStatus.VERIFIED
+    );
+
+    // return
+    return result;
   };
 
   /**
@@ -125,6 +154,14 @@ class UserService {
       if (user) return false;
       return true;
     });
+  };
+
+  /**
+   * Find user by userId
+   * @returns list users
+   */
+  public findUserById = async (_id: ObjectId) => {
+    return userDao.findById(_id);
   };
 
   /**
@@ -202,6 +239,21 @@ class UserService {
 
     // return
     return { accessToken, refreshToken };
+  };
+
+  /**
+   * Create verify token token from payload
+   * @param user
+   * @param status
+   * @returns Promise<string> token
+   */
+  private signVerifyEmailToken = (userId: ObjectId, status: UserStatus) => {
+    return sign(
+      { userId, type: TokenType.EmailVerifyToken, status },
+      process.env.JWT_VERIFY_EMAIL_TOKEN_KEY as string,
+      { expiresIn: process.env.JWT_VERIFY_EMAIL_TOKEN_EXPIRES_IN as string }
+      // { expiresIn: '5s' } // TODO: for testing
+    );
   };
 }
 

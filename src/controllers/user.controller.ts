@@ -9,7 +9,7 @@ class UserController {
    * Retrieves all users.
    * @returns A promise that resolves to the list of users.
    */
-  public findAll = async (req: Request, res: Response, next: NextFunction) => {
+  public findAll = async (req: Request, res: Response) => {
     const result = await userService.findAll();
     console.log(result);
     res.json(result);
@@ -19,7 +19,7 @@ class UserController {
    * Registers a new user.
    * @returns A promise that resolves to the registered user.
    */
-  public register = async (req: Request, res: Response, next: NextFunction) => {
+  public register = async (req: Request, res: Response) => {
     const data = await userService.register(req.body);
     const response = new ApplicationResponse({
       message: CommonMessage.CREATED,
@@ -33,7 +33,7 @@ class UserController {
    * Logs in a user.
    * @returns A promise that resolves to the logged in user
    */
-  public login = async (req: Request, res: Response, next: NextFunction) => {
+  public login = async (req: Request, res: Response) => {
     const data = await userService.login(req.body);
 
     // check result
@@ -59,11 +59,7 @@ class UserController {
    * Refreshes a user's token.
    * @returns A promise that resolves to the refreshed token.
    */
-  public refreshToken = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  public refreshToken = async (req: Request, res: Response) => {
     const data = await userService.refreshToken(req.authorization);
     const response = new ApplicationResponse({
       message: CommonMessage.SUCCESS,
@@ -77,11 +73,25 @@ class UserController {
    * Logs out a user.
    * @returns A promise that resolves to a message indicating that the user has been logged out.
    */
-  public logout = async (req: Request, res: Response, next: NextFunction) => {
+  public logout = async (req: Request, res: Response) => {
     await userService.logout(req.authorization);
     const response = new ApplicationResponse({
       message: CommonMessage.SUCCESS,
       detail: UserMessage.LOGOUT_SUCCESS
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
+  };
+
+  /**
+   * Refreshes a user's token.
+   * @returns A promise that resolves to the refreshed token.
+   */
+  public verifyEmail = async (req: Request, res: Response) => {
+    const data = await userService.verifyEmail(req.authorization);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      detail: UserMessage.VERIFY_EMAIL_TOKEN_SUCCESS,
+      data
     });
     res.status(HttpStatus.SUCCESS).json(response);
   };

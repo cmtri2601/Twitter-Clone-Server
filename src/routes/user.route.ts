@@ -10,14 +10,14 @@ import asyncErrorHandler from '~/middlewares/asyncErrorHandler';
 const route = Router();
 
 /**
- * Description: Retrieves all users.
+ * Description: Retrieve all users.
  * Path: users/
  * Method: GET
  */
 route.get('/', asyncErrorHandler(userController.findAll));
 
 /**
- * Description: Registers a new user.
+ * Description: Register a new user.
  * Path: users/register
  * Method: POST
  */
@@ -28,7 +28,7 @@ route.post(
 );
 
 /**
- * Description: Logs in a user.
+ * Description: Log in a user.
  * Path: users/login
  * Method: POST
  */
@@ -39,7 +39,7 @@ route.post(
 );
 
 /**
- * Description: Refreshes a user's token.
+ * Description: Refresh a user's token.
  * Path: users/refresh-token
  * Method: POST
  */
@@ -50,7 +50,7 @@ route.post(
 );
 
 /**
- * Description: Logs out a user.
+ * Description: Log out a user.
  * Path: users/logout
  * Method: POST
  */
@@ -58,6 +58,17 @@ route.post(
   '/logout',
   validateAuthorization(AuthorizationType.ACCESS_TOKEN_AND_REFRESH_TOKEN),
   asyncErrorHandler(userController.logout)
+);
+
+/**
+ * Description: Verify a user.
+ * Path: users/verify-email
+ * Method: POST
+ */
+route.post(
+  '/verify-email',
+  validateAuthorization(AuthorizationType.VERIFY_EMAIL_TOKEN),
+  asyncErrorHandler(userController.verifyEmail)
 );
 
 export default route;

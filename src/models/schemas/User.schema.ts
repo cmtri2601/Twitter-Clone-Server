@@ -7,8 +7,8 @@ export interface User {
   firstName: string;
   lastName: string;
 
-  verifyToken: string;
-  resetPasswordToken?: string;
+  verifyEmailToken: string;
+  forgotPasswordToken?: string;
 
   createAt?: string;
   updateAt?: string;
@@ -28,8 +28,8 @@ export class UserEntity {
   first_name: string;
   last_name: string;
 
-  verify_token: string;
-  reset_password_token?: string;
+  verify_email_token: string;
+  forgot_password_token?: string;
 
   create_at: Date;
   update_at: Date;
@@ -47,8 +47,8 @@ export class UserEntity {
     this.password = user.password;
     this.first_name = user.firstName;
     this.last_name = user.lastName;
-    this.verify_token = user.verifyToken;
-    this.reset_password_token = user.resetPasswordToken;
+    this.verify_email_token = user.verifyEmailToken;
+    this.forgot_password_token = user.forgotPasswordToken;
     this.create_at = user.createAt ? new Date(user.createAt) : new Date();
     this.update_at = user.updateAt ? new Date(user.updateAt) : new Date();
     this.bio = user.bio;

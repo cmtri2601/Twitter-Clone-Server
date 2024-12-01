@@ -18,5 +18,8 @@ export enum UserMessage {
   ACCESS_TOKEN_REQUIRED = 'Access token is required',
   REFRESH_TOKEN_REQUIRED = 'Refresh token is required',
   REFRESH_TOKEN_NOT_EXISTED = 'Refresh token is not existed',
-  REFRESH_TOKEN_SUCCESS = 'Refresh token successfully'
+  REFRESH_TOKEN_SUCCESS = 'Refresh token successfully',
+  VERIFY_EMAIL_TOKEN_REQUIRED = 'Verify email token is required',
+  VERIFY_EMAIL_TOKEN_NOT_EXISTED = 'Verify email token is not existed',
+  VERIFY_EMAIL_TOKEN_SUCCESS = 'Verify email token successfully'
 }
