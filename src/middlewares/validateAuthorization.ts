@@ -177,16 +177,11 @@ const validateVerifyEmailToken = async (
     );
 
     // case: verify email token is not exist in db
-    if (!entity || entity.verify_email_token !== verifyEmailToken) {
-      throw new ApplicationError(
-        HttpStatus.NOT_FOUND,
-        CommonMessage.NOT_FOUND,
-        UserMessage.VERIFY_EMAIL_TOKEN_NOT_EXISTED
-      );
-    }
-
-    // case: verify email token is not exist in db
-    if (!entity || entity.verify_email_token !== verifyEmailToken) {
+    if (
+      !entity ||
+      (entity.verify_email_token && // if false => already verified
+        entity.verify_email_token !== verifyEmailToken) // wrong token
+    ) {
       throw new ApplicationError(
         HttpStatus.NOT_FOUND,
         CommonMessage.NOT_FOUND,

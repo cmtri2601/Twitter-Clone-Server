@@ -24,11 +24,15 @@ class UserDao {
     return await database.users.insertOne(entity);
   }
 
-  public async updateUserStatus(_id: ObjectId, status: UserStatus) {
+  public async updateVerifyEmailToken(
+    _id: ObjectId,
+    token: string,
+    status: UserStatus
+  ) {
     return await database.users.updateOne(
       { _id },
       {
-        $set: { status: status, verify_email_token: '' },
+        $set: { status: status, verify_email_token: token },
         $currentDate: { update_at: true }
       }
     );

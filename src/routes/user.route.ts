@@ -71,4 +71,15 @@ route.post(
   asyncErrorHandler(userController.verifyEmail)
 );
 
+/**
+ * Description: Resend email to verify user.
+ * Path: users/resend-verify-email
+ * Method: POST
+ */
+route.post(
+  '/resend-verify-email',
+  validateAuthorization(),
+  asyncErrorHandler(userController.resendVerifyEmail)
+);
+
 export default route;

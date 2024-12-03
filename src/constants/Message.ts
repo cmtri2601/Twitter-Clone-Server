@@ -21,5 +21,7 @@ export enum UserMessage {
   REFRESH_TOKEN_SUCCESS = 'Refresh token successfully',
   VERIFY_EMAIL_TOKEN_REQUIRED = 'Verify email token is required',
   VERIFY_EMAIL_TOKEN_NOT_EXISTED = 'Verify email token is not existed',
-  VERIFY_EMAIL_TOKEN_SUCCESS = 'Verify email token successfully'
+  VERIFY_EMAIL_TOKEN_SUCCESS = 'Verify email token successfully',
+  ALREADY_VERIFY_EMAIL_TOKEN = 'Verify email token was already verified',
+  RESEND_VERIFY_EMAIL_TOKEN_SUCCESS = 'Resend verify email token successfully'
 }

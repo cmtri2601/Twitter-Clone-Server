@@ -1,3 +1,4 @@
+import { ApplicationResponse } from '~/models/utils/Response';
 import { ObjectId } from 'mongodb';
 import { UserMessage } from '~/constants/Message';
 import { TokenType } from '~/constants/TokenType';
@@ -127,14 +128,58 @@ class UserService {
    * @returns
    */
   public verifyEmail = async (authorization: Authorization) => {
+    // check user is verified
+    const isVerified = await this.isUserVerified(
+      authorization.userId as ObjectId
+    );
+
+    if (isVerified) {
+      return UserMessage.ALREADY_VERIFY_EMAIL_TOKEN;
+    }
+
     // update user status
-    const result = await userDao.updateUserStatus(
+    const result = await userDao.updateVerifyEmailToken(
       authorization.userId as ObjectId,
+      '', // remove verify email token
       UserStatus.VERIFIED
     );
 
     // return
-    return result;
+    return UserMessage.VERIFY_EMAIL_TOKEN_SUCCESS;
+  };
+
+  /**
+   * Resend verify email
+   * @param authorization
+   * @returns
+   */
+  public resendVerifyEmail = async (authorization: Authorization) => {
+    // check user is verified
+    const isVerified = await this.isUserVerified(
+      authorization.userId as ObjectId
+    );
+
+    if (isVerified) {
+      return UserMessage.ALREADY_VERIFY_EMAIL_TOKEN;
+    }
+
+    // create verify email token
+    const verifyEmailToken = await this.signVerifyEmailToken(
+      authorization.userId as ObjectId,
+      UserStatus.UNVERIFIED
+    );
+
+    // update user status
+    await userDao.updateVerifyEmailToken(
+      authorization.userId as ObjectId,
+      verifyEmailToken,
+      UserStatus.UNVERIFIED
+    );
+
+    // TODO: send verify email - FAKE (replace with real send email later)
+    console.log('Verify email token:', verifyEmailToken);
+
+    return UserMessage.RESEND_VERIFY_EMAIL_TOKEN_SUCCESS;
   };
 
   /**
@@ -254,6 +299,16 @@ class UserService {
       { expiresIn: process.env.JWT_VERIFY_EMAIL_TOKEN_EXPIRES_IN as string }
       // { expiresIn: '5s' } // TODO: for testing
     );
+  };
+
+  /**
+   * Check whether user is verified or not
+   * @returns list users
+   */
+  public isUserVerified = async (userId: ObjectId) => {
+    return userDao.findById(userId).then((user) => {
+      return !user?.verify_email_token;
+    });
   };
 }
 

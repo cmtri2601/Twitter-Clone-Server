@@ -1,12 +1,12 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { HttpStatus } from '~/constants/HttpStatus';
-import { UserMessage, CommonMessage } from '~/constants/Message';
+import { CommonMessage, UserMessage } from '~/constants/Message';
 import { ApplicationResponse } from '~/models/utils/Response';
 import userService from '~/services/user.service';
 
 class UserController {
   /**
-   * Retrieves all users.
+   * Retrieve all users.
    * @returns A promise that resolves to the list of users.
    */
   public findAll = async (req: Request, res: Response) => {
@@ -16,7 +16,7 @@ class UserController {
   };
 
   /**
-   * Registers a new user.
+   * Register new user.
    * @returns A promise that resolves to the registered user.
    */
   public register = async (req: Request, res: Response) => {
@@ -30,7 +30,7 @@ class UserController {
   };
 
   /**
-   * Logs in a user.
+   * Login  user.
    * @returns A promise that resolves to the logged in user
    */
   public login = async (req: Request, res: Response) => {
@@ -56,7 +56,7 @@ class UserController {
   };
 
   /**
-   * Refreshes a user's token.
+   * Refreshes user's token.
    * @returns A promise that resolves to the refreshed token.
    */
   public refreshToken = async (req: Request, res: Response) => {
@@ -70,7 +70,7 @@ class UserController {
   };
 
   /**
-   * Logs out a user.
+   * Logs out.
    * @returns A promise that resolves to a message indicating that the user has been logged out.
    */
   public logout = async (req: Request, res: Response) => {
@@ -83,15 +83,27 @@ class UserController {
   };
 
   /**
-   * Refreshes a user's token.
+   * Verify email.
    * @returns A promise that resolves to the refreshed token.
    */
   public verifyEmail = async (req: Request, res: Response) => {
-    const data = await userService.verifyEmail(req.authorization);
+    const detail = await userService.verifyEmail(req.authorization);
     const response = new ApplicationResponse({
       message: CommonMessage.SUCCESS,
-      detail: UserMessage.VERIFY_EMAIL_TOKEN_SUCCESS,
-      data
+      detail
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
+  };
+
+  /**
+   * Refreshes a user's token.
+   * @returns A promise that resolves to the refreshed token.
+   */
+  public resendVerifyEmail = async (req: Request, res: Response) => {
+    const detail = await userService.resendVerifyEmail(req.authorization);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      detail
     });
     res.status(HttpStatus.SUCCESS).json(response);
   };
