@@ -232,6 +232,25 @@ class UserService {
   };
 
   /**
+   * Change password
+   * @param authorization
+   * @returns
+   */
+  public changePassword = async (
+    body: ResetPasswordRequest,
+    authorization: Authorization
+  ) => {
+    // hash password
+    const hashPassword = hash(body.password as string);
+
+    // save token and password to database
+    await userDao.changePassword(
+      authorization.userId as ObjectId,
+      hashPassword
+    );
+  };
+
+  /**
    * Find user by email and check email already exist
    * @returns list users
    */

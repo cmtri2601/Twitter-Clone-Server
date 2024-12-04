@@ -28,5 +28,6 @@ export enum UserMessage {
   SEND_FORGOT_PASSWORD_TOKEN_SUCCESS = 'Reset password email was send, please check your email',
   FORGOT_PASSWORD_TOKEN_REQUIRED = 'Forgot password token is required',
   FORGOT_PASSWORD_TOKEN_NOT_EXISTED = 'Forgot password token is not existed',
-  RESET_PASSWORD_SUCCESS = 'Reset password successfully'
+  RESET_PASSWORD_SUCCESS = 'Reset password successfully',
+  CHANGE_PASSWORD_SUCCESS = 'Change password successfully'
 }

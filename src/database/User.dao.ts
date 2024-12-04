@@ -57,6 +57,16 @@ class UserDao {
       }
     );
   }
+
+  public async changePassword(_id: ObjectId, password: string) {
+    return await database.users.updateOne(
+      { _id },
+      {
+        $set: { password },
+        $currentDate: { update_at: true }
+      }
+    );
+  }
 }
 
 const userDao = new UserDao();

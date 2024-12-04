@@ -132,6 +132,19 @@ class UserController {
     });
     res.status(HttpStatus.SUCCESS).json(response);
   };
+
+  /**
+   * Change password.
+   * @returns A promise that resolves to a message that password has been update.
+   */
+  public changePassword = async (req: Request, res: Response) => {
+    userService.changePassword(req.body, req.authorization);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      detail: UserMessage.CHANGE_PASSWORD_SUCCESS
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
+  };
 }
 
 const userController = new UserController();

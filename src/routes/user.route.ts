@@ -96,8 +96,8 @@ route.post(
 );
 
 /**
- * Description: Forgot password.
- * Path: users/forgot-password
+ * Description: Reset password.
+ * Path: users/reset-password
  * Method: POST
  */
 route.post(
@@ -105,6 +105,18 @@ route.post(
   validateAuthorization(AuthorizationType.FORGOT_PASSWORD_TOKEN),
   validateRequest(ResetPasswordRequest),
   asyncErrorHandler(userController.resetPassword)
+);
+
+/**
+ * Description: Reset password.
+ * Path: users/reset-password
+ * Method: POST
+ */
+route.post(
+  '/change-password',
+  validateAuthorization(),
+  validateRequest(ResetPasswordRequest),
+  asyncErrorHandler(userController.changePassword)
 );
 
 export default route;
