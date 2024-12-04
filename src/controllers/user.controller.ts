@@ -11,7 +11,6 @@ class UserController {
    */
   public findAll = async (req: Request, res: Response) => {
     const result = await userService.findAll();
-    console.log(result);
     res.json(result);
   };
 
@@ -23,7 +22,7 @@ class UserController {
     const data = await userService.register(req.body);
     const response = new ApplicationResponse({
       message: CommonMessage.CREATED,
-      detail: UserMessage.CREATED,
+      detail: UserMessage.REGISTER_SUCCESS,
       data
     });
     res.status(HttpStatus.CREATED).json(response);
@@ -84,7 +83,7 @@ class UserController {
 
   /**
    * Verify email.
-   * @returns A promise that resolves to the refreshed token.
+   * @returns A promise that resolves to a message indicating that user has been verify.
    */
   public verifyEmail = async (req: Request, res: Response) => {
     const detail = await userService.verifyEmail(req.authorization);
@@ -97,13 +96,39 @@ class UserController {
 
   /**
    * Refreshes a user's token.
-   * @returns A promise that resolves to the refreshed token.
+   * @returns A promise that resolves to a message indicating that the email has been resent.
    */
   public resendVerifyEmail = async (req: Request, res: Response) => {
     const detail = await userService.resendVerifyEmail(req.authorization);
     const response = new ApplicationResponse({
       message: CommonMessage.SUCCESS,
       detail
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
+  };
+
+  /**
+   * Forgot password.
+   * @returns A promise that resolves to a message that forgot password token has been sent.
+   */
+  public forgotPassword = async (req: Request, res: Response) => {
+    userService.forgotPassword(req.body);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      detail: UserMessage.SEND_FORGOT_PASSWORD_TOKEN_SUCCESS
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
+  };
+
+  /**
+   * Reset password.
+   * @returns A promise that resolves to a message that password has been update.
+   */
+  public resetPassword = async (req: Request, res: Response) => {
+    userService.resetPassword(req.body, req.authorization);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      detail: UserMessage.RESET_PASSWORD_SUCCESS
     });
     res.status(HttpStatus.SUCCESS).json(response);
   };

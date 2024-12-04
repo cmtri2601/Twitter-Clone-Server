@@ -11,22 +11,30 @@ import userService from '~/services/user.service';
 export class IsEmailAlreadyExistConstraint
   implements ValidatorConstraintInterface
 {
-  async validate(email: any) {
-    return userService.isEmailAlreadyExist(email);
+  async validate(email: any, args: ValidationArguments) {
+    const [expect] = args.constraints;
+    const isEmailAlreadyExist = await userService.isEmailAlreadyExist(email);
+    return expect ? isEmailAlreadyExist : !isEmailAlreadyExist;
   }
 
   defaultMessage(args: ValidationArguments) {
-    return `${args.property} is already exist`;
+    const [expect] = args.constraints;
+    return expect
+      ? `${args.property} is not exist`
+      : `${args.property} is already exist`;
   }
 }
 
-export function IsEmailAlreadyExist(validationOptions?: ValidationOptions) {
+export function IsEmailAlreadyExist(
+  expect: boolean = false, // default is false, true is want to exist, false is want to not exist
+  validationOptions?: ValidationOptions
+) {
   return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
-      constraints: [],
+      constraints: [expect],
       validator: IsEmailAlreadyExistConstraint
     });
   };

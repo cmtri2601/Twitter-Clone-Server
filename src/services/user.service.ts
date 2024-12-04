@@ -10,8 +10,18 @@ import { User, UserEntity } from '~/models/schemas/User.schema';
 import Authorization from '~/models/utils/Authorization';
 import hash from '~/utils/crypto';
 import { sign, verify } from './../utils/jwt';
+import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
+import { ResetPasswordRequest } from '~/dto/users/ResetPassword';
 
 class UserService {
+  /**
+   * Find all user in database
+   * @returns list users
+   */
+  public findAll = () => {
+    return userDao.findAll();
+  };
+
   /**
    * Register new user
    * @param user
@@ -183,11 +193,42 @@ class UserService {
   };
 
   /**
-   * Find all user in database
-   * @returns list users
+   * Forgot password
+   * @param authorization
+   * @returns
    */
-  public findAll = () => {
-    return userDao.findAll();
+  public forgotPassword = async (body: ForgotPasswordRequest) => {
+    // create forgot password token
+    const forgotPasswordToken = await this.signForgotPasswordToken(
+      body.email as string
+    );
+
+    // save token to database
+    await userDao.updateForgotPasswordToken(
+      body.email as string,
+      forgotPasswordToken
+    );
+
+    // TODO: send verify email - FAKE (replace with real send email later)
+    console.log(
+      `Please click to this link to reset password: http://localhost:3000/users/reset-password?token=${forgotPasswordToken}`
+    );
+  };
+
+  /**
+   * Reset password
+   * @param authorization
+   * @returns
+   */
+  public resetPassword = async (
+    body: ResetPasswordRequest,
+    authorization: Authorization
+  ) => {
+    // hash password
+    const hashPassword = hash(body.password as string);
+
+    // save token and password to database
+    await userDao.resetPassword(authorization.userId as ObjectId, hashPassword);
   };
 
   /**
@@ -196,8 +237,7 @@ class UserService {
    */
   public isEmailAlreadyExist = async (email: string) => {
     return userDao.findByEmail(email).then((user) => {
-      if (user) return false;
-      return true;
+      return !!user;
     });
   };
 
@@ -207,6 +247,14 @@ class UserService {
    */
   public findUserById = async (_id: ObjectId) => {
     return userDao.findById(_id);
+  };
+
+  /**
+   * Find user by email
+   * @returns list users
+   */
+  public findUserByEmail = async (email: string) => {
+    return userDao.findByEmail(email);
   };
 
   /**
@@ -297,6 +345,21 @@ class UserService {
       { userId, type: TokenType.EmailVerifyToken, status },
       process.env.JWT_VERIFY_EMAIL_TOKEN_KEY as string,
       { expiresIn: process.env.JWT_VERIFY_EMAIL_TOKEN_EXPIRES_IN as string }
+      // { expiresIn: '5s' } // TODO: for testing
+    );
+  };
+
+  /**
+   * Create verify token token from payload
+   * @param user
+   * @param status
+   * @returns Promise<string> token
+   */
+  private signForgotPasswordToken = (email: string) => {
+    return sign(
+      { email, type: TokenType.ForgotPasswordToken },
+      process.env.JWT_FORGOT_PASSWORD_TOKEN_KEY as string,
+      { expiresIn: process.env.JWT_FORGOT_PASSWORD_TOKEN_EXPIRES_IN as string }
       // { expiresIn: '5s' } // TODO: for testing
     );
   };

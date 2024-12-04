@@ -40,14 +40,11 @@ const validateAuthorization = (
         break;
       }
       case AuthorizationType.VERIFY_EMAIL_TOKEN: {
-        const [access, verifyEmail] = await Promise.all([
-          validateAccessToken(req),
-          validateVerifyEmailToken(req)
-        ]);
-        authorization = { ...access, ...verifyEmail };
+        authorization = await validateVerifyEmailToken(req);
         break;
       }
       case AuthorizationType.FORGOT_PASSWORD_TOKEN: {
+        authorization = await validateForgotPasswordToken(req);
         break;
       }
       default:
@@ -152,7 +149,7 @@ const validateRefreshToken = async (
 const validateVerifyEmailToken = async (
   req: Request
 ): Promise<Authorization | undefined> => {
-  // get refresh token from req body
+  // get verify email token from req body
   const verifyEmailToken = req.body.verifyEmailToken;
 
   try {
@@ -176,11 +173,19 @@ const validateVerifyEmailToken = async (
       new ObjectId(userId as string)
     );
 
+    // case: user not existed
+    if (!entity) {
+      throw new ApplicationError(
+        HttpStatus.NOT_FOUND,
+        CommonMessage.NOT_FOUND,
+        UserMessage.USER_NOT_EXISTED
+      );
+    }
+
     // case: verify email token is not exist in db
     if (
-      !entity ||
-      (entity.verify_email_token && // if false => already verified
-        entity.verify_email_token !== verifyEmailToken) // wrong token
+      entity.verify_email_token && // if false => already verified
+      entity.verify_email_token !== verifyEmailToken // wrong token
     ) {
       throw new ApplicationError(
         HttpStatus.NOT_FOUND,
@@ -194,6 +199,63 @@ const validateVerifyEmailToken = async (
       userId: new ObjectId(userId as string),
       status
     });
+  } catch (error) {
+    catchError(error);
+  }
+};
+
+/**
+ * Validate refresh token
+ * @param req contains refresh token
+ * @returns authorization object
+ */
+const validateForgotPasswordToken = async (
+  req: Request
+): Promise<Authorization | undefined> => {
+  // get forgot password token from req body
+  const forgotPasswordToken = req.body.forgotPasswordToken;
+
+  try {
+    // case: req body doesn't have verify token
+    if (!forgotPasswordToken) {
+      throw new ApplicationError(
+        HttpStatus.BAD_REQUEST,
+        CommonMessage.BAD_REQUEST,
+        UserMessage.FORGOT_PASSWORD_TOKEN_REQUIRED
+      );
+    }
+
+    // decode verify email token
+    const { email } = await verify(
+      forgotPasswordToken as string,
+      process.env.JWT_FORGOT_PASSWORD_TOKEN_KEY as string
+    );
+
+    // check token is existed in db
+    const entity = await userService.findUserByEmail(email);
+
+    // case: user not existed
+    if (!entity) {
+      throw new ApplicationError(
+        HttpStatus.NOT_FOUND,
+        CommonMessage.NOT_FOUND,
+        UserMessage.USER_NOT_EXISTED
+      );
+    }
+
+    // case: forgot password token is not exist in db
+    if (
+      entity.forgot_password_token !== forgotPasswordToken // wrong token
+    ) {
+      throw new ApplicationError(
+        HttpStatus.NOT_FOUND,
+        CommonMessage.NOT_FOUND,
+        UserMessage.FORGOT_PASSWORD_TOKEN_NOT_EXISTED
+      );
+    }
+
+    // case: verify email token is valid -> set value to authorization object
+    return new Authorization({ userId: entity._id });
   } catch (error) {
     catchError(error);
   }

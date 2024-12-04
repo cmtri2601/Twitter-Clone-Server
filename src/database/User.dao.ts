@@ -37,6 +37,26 @@ class UserDao {
       }
     );
   }
+
+  public async updateForgotPasswordToken(email: string, token: string) {
+    return await database.users.updateOne(
+      { email },
+      {
+        $set: { forgot_password_token: token },
+        $currentDate: { update_at: true }
+      }
+    );
+  }
+
+  public async resetPassword(_id: ObjectId, password: string) {
+    return await database.users.updateOne(
+      { _id },
+      {
+        $set: { forgot_password_token: '', password },
+        $currentDate: { update_at: true }
+      }
+    );
+  }
 }
 
 const userDao = new UserDao();

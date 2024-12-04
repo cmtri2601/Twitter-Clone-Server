@@ -11,7 +11,8 @@ export enum CommonMessage {
 }
 
 export enum UserMessage {
-  CREATED = 'User created successfully',
+  USER_NOT_EXISTED = 'User is not existed',
+  REGISTER_SUCCESS = 'Register user successfully',
   LOGIN_SUCCESS = 'Login successfully',
   LOGIN_FAIL = 'Email or password is incorrect',
   LOGOUT_SUCCESS = 'Logout successfully',
@@ -23,5 +24,9 @@ export enum UserMessage {
   VERIFY_EMAIL_TOKEN_NOT_EXISTED = 'Verify email token is not existed',
   VERIFY_EMAIL_TOKEN_SUCCESS = 'Verify email token successfully',
   ALREADY_VERIFY_EMAIL_TOKEN = 'Verify email token was already verified',
-  RESEND_VERIFY_EMAIL_TOKEN_SUCCESS = 'Resend verify email token successfully'
+  RESEND_VERIFY_EMAIL_TOKEN_SUCCESS = 'Verify email was send, please check your email',
+  SEND_FORGOT_PASSWORD_TOKEN_SUCCESS = 'Reset password email was send, please check your email',
+  FORGOT_PASSWORD_TOKEN_REQUIRED = 'Forgot password token is required',
+  FORGOT_PASSWORD_TOKEN_NOT_EXISTED = 'Forgot password token is not existed',
+  RESET_PASSWORD_SUCCESS = 'Reset password successfully'
 }

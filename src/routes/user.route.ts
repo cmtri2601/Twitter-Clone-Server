@@ -6,6 +6,8 @@ import { RegisterRequest } from '~/dto/users/Register.dto';
 import validateAuthorization from '~/middlewares/validateAuthorization';
 import validateRequest from '~/middlewares/validateRequest';
 import asyncErrorHandler from '~/middlewares/asyncErrorHandler';
+import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
+import { ResetPasswordRequest } from '~/dto/users/ResetPassword';
 
 const route = Router();
 
@@ -80,6 +82,29 @@ route.post(
   '/resend-verify-email',
   validateAuthorization(),
   asyncErrorHandler(userController.resendVerifyEmail)
+);
+
+/**
+ * Description: Forgot password.
+ * Path: users/forgot-password
+ * Method: POST
+ */
+route.post(
+  '/forgot-password',
+  validateRequest(ForgotPasswordRequest),
+  asyncErrorHandler(userController.forgotPassword)
+);
+
+/**
+ * Description: Forgot password.
+ * Path: users/forgot-password
+ * Method: POST
+ */
+route.post(
+  '/reset-password',
+  validateAuthorization(AuthorizationType.FORGOT_PASSWORD_TOKEN),
+  validateRequest(ResetPasswordRequest),
+  asyncErrorHandler(userController.resetPassword)
 );
 
 export default route;
