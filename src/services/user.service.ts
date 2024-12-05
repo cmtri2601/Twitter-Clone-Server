@@ -1,6 +1,6 @@
 import { ApplicationResponse } from '~/models/utils/Response';
 import { ObjectId } from 'mongodb';
-import { UserMessage } from '~/constants/Message';
+import { CommonMessage, UserMessage } from '~/constants/Message';
 import { TokenType } from '~/constants/TokenType';
 import { UserStatus } from '~/constants/UserStatus';
 import refreshTokenDao from '~/database/RefreshToken.dao';
@@ -11,7 +11,12 @@ import Authorization from '~/models/utils/Authorization';
 import hash from '~/utils/crypto';
 import { sign, verify } from './../utils/jwt';
 import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
-import { ResetPasswordRequest } from '~/dto/users/ResetPassword';
+import {
+  ChangePasswordRequest,
+  ResetPasswordRequest
+} from '~/dto/users/ChangePassword';
+import { ApplicationError } from '~/models/utils/Error';
+import { HttpStatus } from '~/constants/HttpStatus';
 
 class UserService {
   /**
@@ -38,7 +43,7 @@ class UserService {
     );
 
     // hash password
-    const hashPassword = hash(user.password);
+    const hashPassword = hash(user.password as string);
 
     // save user
     const userEntity = new UserEntity({
@@ -75,12 +80,12 @@ class UserService {
     refreshToken?: string;
   }> => {
     // hash password
-    const hashPassword = hash(user.password);
+    const hashPassword = hash(user.password as string);
     user.password = hashPassword;
 
     // find user
     const userEntity = await userDao.findByEmailAndPassword(
-      user.email,
+      user.email as string,
       hashPassword
     );
 
@@ -94,7 +99,7 @@ class UserService {
     // create jwt
     const tokens = await this.signAccessAndRefreshToken(
       userEntity._id,
-      UserStatus.UNVERIFIED
+      userEntity.status as UserStatus
     );
 
     // return
@@ -237,17 +242,49 @@ class UserService {
    * @returns
    */
   public changePassword = async (
-    body: ResetPasswordRequest,
+    body: ChangePasswordRequest,
     authorization: Authorization
   ) => {
+    // hash old password
+    const hashOldPassword = hash(body.oldPassword as string);
+
+    // check old password
+    const entity = await userDao.findById(authorization.userId as ObjectId);
+    if (!entity || entity.password !== hashOldPassword) {
+      throw new ApplicationError(
+        HttpStatus.UNAUTHORIZED,
+        CommonMessage.UNAUTHORIZED,
+        UserMessage.PASSWORD_NOT_MATCH
+      );
+    }
+
     // hash password
-    const hashPassword = hash(body.password as string);
+    const hashPassword = hash(body.newPassword as string);
 
     // save token and password to database
     await userDao.changePassword(
       authorization.userId as ObjectId,
       hashPassword
     );
+  };
+
+  /**
+   * Get account's information
+   * @param authorization
+   * @returns
+   */
+  public getMe = async (authorization: Authorization) => {
+    const entity = await userDao.findById(authorization.userId as ObjectId);
+
+    if (!entity) {
+      throw new ApplicationError(
+        HttpStatus.NOT_FOUND,
+        CommonMessage.NOT_FOUND,
+        UserMessage.REFRESH_TOKEN_NOT_EXISTED
+      );
+    }
+
+    return new User(entity);
   };
 
   /**

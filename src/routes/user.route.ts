@@ -7,7 +7,7 @@ import validateAuthorization from '~/middlewares/validateAuthorization';
 import validateRequest from '~/middlewares/validateRequest';
 import asyncErrorHandler from '~/middlewares/asyncErrorHandler';
 import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
-import { ResetPasswordRequest } from '~/dto/users/ResetPassword';
+import { ResetPasswordRequest } from '~/dto/users/ChangePassword';
 
 const route = Router();
 
@@ -80,7 +80,7 @@ route.post(
  */
 route.post(
   '/resend-verify-email',
-  validateAuthorization(),
+  validateAuthorization(AuthorizationType.ACCESS_TOKEN),
   asyncErrorHandler(userController.resendVerifyEmail)
 );
 
@@ -117,6 +117,17 @@ route.post(
   validateAuthorization(),
   validateRequest(ResetPasswordRequest),
   asyncErrorHandler(userController.changePassword)
+);
+
+/**
+ * Description: Get account's information.
+ * Path: users/me
+ * Method: GET
+ */
+route.get(
+  '/me',
+  validateAuthorization(),
+  asyncErrorHandler(userController.getMe)
 );
 
 export default route;

@@ -12,6 +12,7 @@ export enum CommonMessage {
 
 export enum UserMessage {
   USER_NOT_EXISTED = 'User is not existed',
+  USER_IS_NOT_VERIFIED = 'User have not been verified',
   REGISTER_SUCCESS = 'Register user successfully',
   LOGIN_SUCCESS = 'Login successfully',
   LOGIN_FAIL = 'Email or password is incorrect',
@@ -29,5 +30,6 @@ export enum UserMessage {
   FORGOT_PASSWORD_TOKEN_REQUIRED = 'Forgot password token is required',
   FORGOT_PASSWORD_TOKEN_NOT_EXISTED = 'Forgot password token is not existed',
   RESET_PASSWORD_SUCCESS = 'Reset password successfully',
+  PASSWORD_NOT_MATCH = 'Password is not match',
   CHANGE_PASSWORD_SUCCESS = 'Change password successfully'
 }

@@ -2,7 +2,11 @@ import { Expose } from 'class-transformer';
 import { IsStrongPassword, MaxLength } from 'class-validator';
 import { IsMatch } from '~/decorators/IsMatch';
 
-export class ResetPasswordRequest {
+export class ChangePasswordRequest {
+  @Expose()
+  @MaxLength(50)
+  oldPassword?: string;
+
   @Expose()
   @MaxLength(50)
   @IsStrongPassword({
@@ -12,7 +16,7 @@ export class ResetPasswordRequest {
     minNumbers: 1,
     minSymbols: 1
   })
-  password?: string;
+  newPassword?: string;
 
   @Expose()
   @IsMatch('newPassword')

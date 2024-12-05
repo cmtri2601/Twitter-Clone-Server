@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb';
 import { AuthorizationType } from '~/constants/AuthorizationType';
 import { HttpStatus } from '~/constants/HttpStatus';
 import { CommonMessage, UserMessage } from '~/constants/Message';
+import { UserStatus } from '~/constants/UserStatus';
 import asyncErrorHandler from '~/middlewares/asyncErrorHandler';
 import Authorization from '~/models/utils/Authorization';
 import { ApplicationError } from '~/models/utils/Error';
@@ -17,12 +18,17 @@ import { verify } from '~/utils/jwt';
  * @returns authorization object | throw error
  */
 const validateAuthorization = (
-  type: AuthorizationType = AuthorizationType.ACCESS_TOKEN
+  type: AuthorizationType = AuthorizationType.VERIFIED_USER
 ) =>
   asyncErrorHandler(async (req: Request, res: Response, next: NextFunction) => {
     let authorization: Authorization | undefined;
 
     switch (type) {
+      case AuthorizationType.VERIFIED_USER: {
+        authorization = await validateAccessToken(req);
+        validateVerifiedUser(authorization);
+        break;
+      }
       case AuthorizationType.ACCESS_TOKEN: {
         authorization = await validateAccessToken(req);
         break;
@@ -55,6 +61,21 @@ const validateAuthorization = (
     req.authorization = authorization;
     next();
   });
+
+/**
+ * Validate is user verified
+ * @param authorization contain user status
+ * @returns authorization object
+ */
+const validateVerifiedUser = (authorization?: Authorization) => {
+  if (!authorization || authorization.status !== UserStatus.VERIFIED) {
+    throw new ApplicationError(
+      HttpStatus.FORBIDDEN,
+      CommonMessage.FORBIDDEN,
+      UserMessage.USER_IS_NOT_VERIFIED
+    );
+  }
+};
 
 /**
  * Validate access token

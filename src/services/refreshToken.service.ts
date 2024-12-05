@@ -1,6 +1,4 @@
 import refreshTokenDao from '~/database/RefreshToken.dao';
-import { User } from '~/models/schemas/User.schema';
-import hash from '~/utils/crypto';
 
 class RefreshTokenService {
   /**

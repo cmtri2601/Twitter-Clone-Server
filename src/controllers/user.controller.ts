@@ -112,7 +112,7 @@ class UserController {
    * @returns A promise that resolves to a message that forgot password token has been sent.
    */
   public forgotPassword = async (req: Request, res: Response) => {
-    userService.forgotPassword(req.body);
+    await userService.forgotPassword(req.body);
     const response = new ApplicationResponse({
       message: CommonMessage.SUCCESS,
       detail: UserMessage.SEND_FORGOT_PASSWORD_TOKEN_SUCCESS
@@ -125,7 +125,7 @@ class UserController {
    * @returns A promise that resolves to a message that password has been update.
    */
   public resetPassword = async (req: Request, res: Response) => {
-    userService.resetPassword(req.body, req.authorization);
+    await userService.resetPassword(req.body, req.authorization);
     const response = new ApplicationResponse({
       message: CommonMessage.SUCCESS,
       detail: UserMessage.RESET_PASSWORD_SUCCESS
@@ -138,10 +138,23 @@ class UserController {
    * @returns A promise that resolves to a message that password has been update.
    */
   public changePassword = async (req: Request, res: Response) => {
-    userService.changePassword(req.body, req.authorization);
+    await userService.changePassword(req.body, req.authorization);
     const response = new ApplicationResponse({
       message: CommonMessage.SUCCESS,
       detail: UserMessage.CHANGE_PASSWORD_SUCCESS
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
+  };
+
+  /**
+   * Get account's information.
+   * @returns A promise that resolves to data of account.
+   */
+  public getMe = async (req: Request, res: Response) => {
+    const data = await userService.getMe(req.authorization);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      data
     });
     res.status(HttpStatus.SUCCESS).json(response);
   };
