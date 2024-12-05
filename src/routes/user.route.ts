@@ -7,7 +7,9 @@ import validateAuthorization from '~/middlewares/validateAuthorization';
 import validateRequest from '~/middlewares/validateRequest';
 import asyncErrorHandler from '~/middlewares/asyncErrorHandler';
 import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
-import { ResetPasswordRequest } from '~/dto/users/ChangePassword';
+import { ChangePasswordRequest } from '~/dto/users/ChangePassword';
+import { ResetPasswordRequest } from '~/dto/users/ResetPassword';
+import { UpdateMeRequest } from '~/dto/users/UpdateMe.dto';
 
 const route = Router();
 
@@ -115,7 +117,7 @@ route.post(
 route.post(
   '/change-password',
   validateAuthorization(),
-  validateRequest(ResetPasswordRequest),
+  validateRequest(ChangePasswordRequest),
   asyncErrorHandler(userController.changePassword)
 );
 
@@ -128,6 +130,25 @@ route.get(
   '/me',
   validateAuthorization(),
   asyncErrorHandler(userController.getMe)
+);
+
+/**
+ * Description: Get user's information.
+ * Path: users/:userId
+ * Method: GET
+ */
+route.get('/:userId', asyncErrorHandler(userController.getProfile));
+
+/**
+ * Description: Change account's information.
+ * Path: users/me
+ * Method: PATCH
+ */
+route.patch(
+  '/me',
+  validateAuthorization(),
+  validateRequest(UpdateMeRequest),
+  asyncErrorHandler(userController.updateMe)
 );
 
 export default route;

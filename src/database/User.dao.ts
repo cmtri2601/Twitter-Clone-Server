@@ -1,7 +1,8 @@
 import { ObjectId } from 'mongodb';
-import database from '.';
-import { UserEntity } from '~/models/schemas/User.schema';
 import { UserStatus } from '~/constants/UserStatus';
+import { UpdateMeRequest } from '~/dto/users/UpdateMe.dto';
+import { UserEntity } from '~/models/schemas/User.schema';
+import database from '.';
 
 class UserDao {
   public async findAll() {
@@ -64,6 +65,19 @@ class UserDao {
       {
         $set: { password },
         $currentDate: { update_at: true }
+      }
+    );
+  }
+
+  public async update(_id: ObjectId, user: UpdateMeRequest) {
+    return await database.users.findOneAndUpdate(
+      { _id },
+      {
+        $set: { ...user },
+        $currentDate: { update_at: true }
+      },
+      {
+        returnDocument: 'after'
       }
     );
   }

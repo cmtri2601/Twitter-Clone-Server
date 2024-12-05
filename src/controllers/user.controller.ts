@@ -158,6 +158,32 @@ class UserController {
     });
     res.status(HttpStatus.SUCCESS).json(response);
   };
+
+  /**
+   * Get user's information.
+   * @returns A promise that resolves to data of user.
+   */
+  public getProfile = async (req: Request, res: Response) => {
+    const data = await userService.getProfile(req.params.userId);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      data
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
+  };
+
+  /**
+   * Change account's information.
+   * @returns A promise that resolves to data of account.
+   */
+  public updateMe = async (req: Request, res: Response) => {
+    const data = await userService.updateMe(req.body, req.authorization);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      data
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
+  };
 }
 
 const userController = new UserController();

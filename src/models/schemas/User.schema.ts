@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { UserStatus } from '~/constants/UserStatus';
+import { UpdateMeRequest } from '~/dto/users/UpdateMe.dto';
 
 export class User {
   _id?: ObjectId;
@@ -22,6 +23,7 @@ export class User {
   avatar?: string;
   coverPhoto?: string;
 
+  // don't expose sensitive information to the client
   constructor(user: UserEntity) {
     this._id = user._id;
     this.email = user.email;
@@ -63,24 +65,39 @@ export class UserEntity {
   avatar?: string;
   cover_photo?: string;
 
-  constructor(user: User) {
-    this._id = user._id;
-    this.email = user.email;
-    this.password = user.password;
-    this.first_name = user.firstName;
-    this.last_name = user.lastName;
-    this.status = user.status;
-    this.verify_email_token = user.verifyEmailToken;
-    this.forgot_password_token = user.forgotPasswordToken;
-    this.create_at = user.createAt ? new Date(user.createAt) : new Date();
-    this.update_at = user.updateAt ? new Date(user.updateAt) : new Date();
-    this.bio = user.bio;
-    this.location = user.location;
-    this.website = user.website;
-    this.day_of_birth = user.dateOfBirth
-      ? new Date(user.dateOfBirth)
-      : undefined;
-    this.avatar = user.avatar;
-    this.cover_photo = user.coverPhoto;
+  constructor(user: User | UpdateMeRequest) {
+    if (user instanceof User) {
+      this._id = user._id;
+      this.email = user.email;
+      this.password = user.password;
+      this.first_name = user.firstName;
+      this.last_name = user.lastName;
+      this.status = user.status;
+      this.verify_email_token = user.verifyEmailToken;
+      this.forgot_password_token = user.forgotPasswordToken;
+      this.create_at = user.createAt ? new Date(user.createAt) : new Date();
+      this.update_at = user.updateAt ? new Date(user.updateAt) : new Date();
+      this.bio = user.bio;
+      this.location = user.location;
+      this.website = user.website;
+      this.day_of_birth = user.dateOfBirth
+        ? new Date(user.dateOfBirth)
+        : undefined;
+      this.avatar = user.avatar;
+      this.cover_photo = user.coverPhoto;
+    }
+
+    if (user instanceof UpdateMeRequest) {
+      this.first_name = user.firstName;
+      this.last_name = user.lastName;
+      this.bio = user.bio;
+      this.location = user.location;
+      this.website = user.website;
+      this.day_of_birth = user.dateOfBirth
+        ? new Date(user.dateOfBirth)
+        : undefined;
+      this.avatar = user.avatar;
+      this.cover_photo = user.coverPhoto;
+    }
   }
 }

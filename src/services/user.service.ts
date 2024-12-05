@@ -1,22 +1,21 @@
-import { ApplicationResponse } from '~/models/utils/Response';
 import { ObjectId } from 'mongodb';
+import { HttpStatus } from '~/constants/HttpStatus';
 import { CommonMessage, UserMessage } from '~/constants/Message';
 import { TokenType } from '~/constants/TokenType';
 import { UserStatus } from '~/constants/UserStatus';
 import refreshTokenDao from '~/database/RefreshToken.dao';
 import userDao from '~/database/User.dao';
+import { ChangePasswordRequest } from '~/dto/users/ChangePassword';
+import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
+import { ResetPasswordRequest } from '~/dto/users/ResetPassword';
 import { RefreshTokenEntity } from '~/models/schemas/RefreshToken.schema';
 import { User, UserEntity } from '~/models/schemas/User.schema';
 import Authorization from '~/models/utils/Authorization';
+import { ApplicationError } from '~/models/utils/Error';
 import hash from '~/utils/crypto';
 import { sign, verify } from './../utils/jwt';
-import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
-import {
-  ChangePasswordRequest,
-  ResetPasswordRequest
-} from '~/dto/users/ChangePassword';
-import { ApplicationError } from '~/models/utils/Error';
-import { HttpStatus } from '~/constants/HttpStatus';
+import { UpdateMeRequest } from '~/dto/users/UpdateMe.dto';
+import { isUndefined, omitBy } from 'lodash';
 
 class UserService {
   /**
@@ -276,14 +275,64 @@ class UserService {
   public getMe = async (authorization: Authorization) => {
     const entity = await userDao.findById(authorization.userId as ObjectId);
 
+    // check user is existed
     if (!entity) {
       throw new ApplicationError(
         HttpStatus.NOT_FOUND,
         CommonMessage.NOT_FOUND,
-        UserMessage.REFRESH_TOKEN_NOT_EXISTED
+        UserMessage.USER_NOT_EXISTED
       );
     }
 
+    return new User(entity);
+  };
+
+  /**
+   * Get account's information
+   * @param authorization
+   * @returns
+   */
+  public getProfile = async (userId: string) => {
+    const entity = await userDao.findById(new ObjectId(userId));
+
+    // check user is existed
+    if (!entity) {
+      throw new ApplicationError(
+        HttpStatus.NOT_FOUND,
+        CommonMessage.NOT_FOUND,
+        UserMessage.USER_NOT_EXISTED
+      );
+    }
+
+    return new User(entity);
+  };
+
+  /**
+   * Get account's information
+   * @param authorization
+   * @returns
+   */
+  public updateMe = async (
+    body: UpdateMeRequest,
+    authorization: Authorization
+  ) => {
+    const userId = authorization.userId as ObjectId;
+    // transform body to entity and remove undefined properties
+    const updateEntity = omitBy(new UserEntity(body), isUndefined);
+
+    // update user
+    const entity = await userDao.update(userId, updateEntity);
+
+    // check user is existed
+    if (!entity) {
+      throw new ApplicationError(
+        HttpStatus.NOT_FOUND,
+        CommonMessage.NOT_FOUND,
+        UserMessage.USER_NOT_EXISTED
+      );
+    }
+
+    // return
     return new User(entity);
   };
 
