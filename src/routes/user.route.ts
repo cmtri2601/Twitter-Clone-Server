@@ -151,4 +151,26 @@ route.patch(
   asyncErrorHandler(userController.updateMe)
 );
 
+/**
+ * Description: Follow user.
+ * Path: users/:userId/follow
+ * Method: POST
+ */
+route.post(
+  '/:userId/follow',
+  validateAuthorization(),
+  asyncErrorHandler(userController.follow)
+);
+
+/**
+ * Description: Unfollow user.
+ * Path: users/:userId/unfollow
+ * Method: DELETE
+ */
+route.delete(
+  '/:userId/unfollow',
+  validateAuthorization(),
+  asyncErrorHandler(userController.unfollow)
+);
+
 export default route;

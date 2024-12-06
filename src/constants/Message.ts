@@ -31,5 +31,8 @@ export enum UserMessage {
   FORGOT_PASSWORD_TOKEN_NOT_EXISTED = 'Forgot password token is not existed',
   RESET_PASSWORD_SUCCESS = 'Reset password successfully',
   PASSWORD_NOT_MATCH = 'Password is not match',
-  CHANGE_PASSWORD_SUCCESS = 'Change password successfully'
+  CHANGE_PASSWORD_SUCCESS = 'Change password successfully',
+  CANNOT_FOLLOW_YOURSELF = 'Cannot follow yourself',
+  FOLLOW_SUCCESS = 'Follow successfully',
+  UNFOLLOW_SUCCESS = 'Unfollow successfully'
 }

@@ -17,6 +17,6 @@ export class ResetPasswordRequest {
 
   @Expose()
   @IsNotEmpty()
-  @IsMatch('newPassword')
+  @IsMatch('password')
   confirmPassword?: string;
 }

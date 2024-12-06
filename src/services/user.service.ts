@@ -16,6 +16,8 @@ import hash from '~/utils/crypto';
 import { sign, verify } from './../utils/jwt';
 import { UpdateMeRequest } from '~/dto/users/UpdateMe.dto';
 import { isUndefined, omitBy } from 'lodash';
+import followerDao from '~/database/Follower.dao';
+import { FollowerEntity } from '~/models/schemas/Followers.schema';
 
 class UserService {
   /**
@@ -28,12 +30,15 @@ class UserService {
 
   /**
    * Register new user
-   * @param user
+   * @param user User
    * @returns access token && refreshToken
    */
   public register = async (user: User) => {
     // create id
     const _id = new ObjectId();
+
+    // create current ISO date
+    const currentISODate = new Date().toISOString();
 
     // create verify email token
     const verifyEmailToken = await this.signVerifyEmailToken(
@@ -49,7 +54,9 @@ class UserService {
       ...user,
       _id,
       password: hashPassword,
-      verifyEmailToken
+      verifyEmailToken,
+      createAt: currentISODate,
+      updateAt: currentISODate
     });
     await userDao.insertUser(userEntity);
 
@@ -68,7 +75,7 @@ class UserService {
 
   /**
    * Login user
-   * @param user
+   * @param user User
    * @returns access token && refreshToken
    */
   public login = async (
@@ -107,7 +114,7 @@ class UserService {
 
   /**
    * Refresh token
-   * @param authorization
+   * @param authorization Authorization
    * @returns access token && refreshToken
    */
   public refreshToken = async (authorization: Authorization) => {
@@ -126,8 +133,7 @@ class UserService {
 
   /**
    * Logout user
-   * @param authorization
-   * @returns access token && refreshToken
+   * @param authorization Authorization
    */
   public logout = async (authorization: Authorization) => {
     // delete old refresh token
@@ -138,8 +144,8 @@ class UserService {
 
   /**
    * Verify email token
-   * @param authorization
-   * @returns
+   * @param authorization Authorization
+   * @returns message
    */
   public verifyEmail = async (authorization: Authorization) => {
     // check user is verified
@@ -164,8 +170,8 @@ class UserService {
 
   /**
    * Resend verify email
-   * @param authorization
-   * @returns
+   * @param authorization Authorization
+   * @returns message
    */
   public resendVerifyEmail = async (authorization: Authorization) => {
     // check user is verified
@@ -198,8 +204,7 @@ class UserService {
 
   /**
    * Forgot password
-   * @param authorization
-   * @returns
+   * @param body ForgotPasswordRequest
    */
   public forgotPassword = async (body: ForgotPasswordRequest) => {
     // create forgot password token
@@ -221,8 +226,8 @@ class UserService {
 
   /**
    * Reset password
-   * @param authorization
-   * @returns
+   * @param body ResetPasswordRequest
+   * @param authorization Authorization
    */
   public resetPassword = async (
     body: ResetPasswordRequest,
@@ -237,8 +242,8 @@ class UserService {
 
   /**
    * Change password
-   * @param authorization
-   * @returns
+   * @param body ChangePasswordRequest
+   * @param authorization Authorization
    */
   public changePassword = async (
     body: ChangePasswordRequest,
@@ -269,48 +274,31 @@ class UserService {
 
   /**
    * Get account's information
-   * @param authorization
-   * @returns
+   * @param authorization Authorization
+   * @returns user information
    */
   public getMe = async (authorization: Authorization) => {
     const entity = await userDao.findById(authorization.userId as ObjectId);
-
-    // check user is existed
-    if (!entity) {
-      throw new ApplicationError(
-        HttpStatus.NOT_FOUND,
-        CommonMessage.NOT_FOUND,
-        UserMessage.USER_NOT_EXISTED
-      );
-    }
-
-    return new User(entity);
+    return new User(entity as UserEntity);
   };
 
   /**
    * Get account's information
-   * @param authorization
-   * @returns
+   * @param userId string (param)
+   * @returns user information
    */
   public getProfile = async (userId: string) => {
-    const entity = await userDao.findById(new ObjectId(userId));
-
     // check user is existed
-    if (!entity) {
-      throw new ApplicationError(
-        HttpStatus.NOT_FOUND,
-        CommonMessage.NOT_FOUND,
-        UserMessage.USER_NOT_EXISTED
-      );
-    }
+    const entity = await this.checkUserExisted(userId);
 
-    return new User(entity);
+    return new User(entity as UserEntity);
   };
 
   /**
    * Get account's information
-   * @param authorization
-   * @returns
+   * @param body UpdateMeRequest
+   * @param authorization Authorization
+   * @returns user after update
    */
   public updateMe = async (
     body: UpdateMeRequest,
@@ -323,17 +311,71 @@ class UserService {
     // update user
     const entity = await userDao.update(userId, updateEntity);
 
-    // check user is existed
-    if (!entity) {
+    // return
+    return new User(entity as UserEntity);
+  };
+
+  /**
+   * Follow user
+   * @param followedUserId string
+   * @param authorization Authorization
+   * @returns
+   */
+  public follow = async (
+    followedUserId: string,
+    authorization: Authorization
+  ) => {
+    const userId = authorization.userId as ObjectId;
+
+    // check followed user is existed
+    const followedUserEntity = await this.checkUserExisted(followedUserId);
+
+    // check followed user is not current user
+    if (followedUserEntity._id.equals(userId)) {
       throw new ApplicationError(
-        HttpStatus.NOT_FOUND,
-        CommonMessage.NOT_FOUND,
-        UserMessage.USER_NOT_EXISTED
+        HttpStatus.BAD_REQUEST,
+        CommonMessage.BAD_REQUEST,
+        UserMessage.CANNOT_FOLLOW_YOURSELF
       );
     }
 
-    // return
-    return new User(entity);
+    // check user is already followed
+    const follower = await followerDao.findFollower(
+      userId,
+      followedUserEntity._id
+    );
+
+    if (follower) {
+      // if follower existed, do not insert db
+      return;
+    }
+
+    // save to database
+    await followerDao.insert(
+      new FollowerEntity({
+        userId: userId,
+        followerId: followedUserEntity._id
+      })
+    );
+  };
+
+  /**
+   * Unfollow user
+   * @param followedUserId string
+   * @param authorization Authorization
+   * @returns
+   */
+  public unfollow = async (
+    followedUserId: string,
+    authorization: Authorization
+  ) => {
+    const userId = authorization.userId as ObjectId;
+
+    // check followed user is existed
+    const followedUserEntity = await this.checkUserExisted(followedUserId);
+
+    // save to database
+    await followerDao.delete(userId, followedUserEntity._id);
   };
 
   /**
@@ -428,7 +470,7 @@ class UserService {
 
     // save refresh token
     const refreshTokenEntity = new RefreshTokenEntity({
-      user_id: userId,
+      userId,
       token: refreshToken,
       iat: decoded.iat as number,
       exp: decoded.exp as number
@@ -477,6 +519,24 @@ class UserService {
     return userDao.findById(userId).then((user) => {
       return !user?.verify_email_token;
     });
+  };
+
+  /**
+   * Check whether user is existed or not
+   * @returns if don't exist, throw error
+   */
+  public checkUserExisted = async (userId: string) => {
+    const entity = await userDao.findById(new ObjectId(userId));
+
+    if (!entity) {
+      throw new ApplicationError(
+        HttpStatus.NOT_FOUND,
+        CommonMessage.NOT_FOUND,
+        UserMessage.USER_NOT_EXISTED
+      );
+    }
+
+    return entity;
   };
 }
 

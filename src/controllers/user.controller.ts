@@ -184,6 +184,32 @@ class UserController {
     });
     res.status(HttpStatus.SUCCESS).json(response);
   };
+
+  /**
+   * Follow user.
+   * @returns A promise that resolves to message indicating follow success.
+   */
+  public follow = async (req: Request, res: Response) => {
+    await userService.follow(req.params.userId, req.authorization);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      detail: UserMessage.FOLLOW_SUCCESS
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
+  };
+
+  /**
+   * Follow user.
+   * @returns A promise that resolves to message indicating follow success.
+   */
+  public unfollow = async (req: Request, res: Response) => {
+    await userService.unfollow(req.params.userId, req.authorization);
+    const response = new ApplicationResponse({
+      message: CommonMessage.SUCCESS,
+      detail: UserMessage.UNFOLLOW_SUCCESS
+    });
+    res.status(HttpStatus.SUCCESS).json(response);
+  };
 }
 
 const userController = new UserController();

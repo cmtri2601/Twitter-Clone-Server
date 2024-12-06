@@ -1,4 +1,5 @@
 import { Collection, MongoClient, ServerApiVersion } from 'mongodb';
+import { FollowerEntity } from '~/models/schemas/Followers.schema';
 import { RefreshTokenEntity } from '~/models/schemas/RefreshToken.schema';
 import { UserEntity } from '~/models/schemas/User.schema';
 
@@ -47,7 +48,14 @@ class DataBase {
    * get refresh_token collection
    */
   get refreshTokens(): Collection<RefreshTokenEntity> {
-    return this.db.collection('refresh_token');
+    return this.db.collection('refresh_tokens');
+  }
+
+  /**
+   * get followers collection
+   */
+  get followers(): Collection<FollowerEntity> {
+    return this.db.collection('followers');
   }
 }
 
