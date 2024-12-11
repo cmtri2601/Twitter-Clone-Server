@@ -5,7 +5,6 @@ import { LoginRequest } from '~/dto/users/Login.dto';
 import { RegisterRequest } from '~/dto/users/Register.dto';
 import validateAuthorization from '~/middlewares/validateAuthorization';
 import validateRequest from '~/middlewares/validateRequest';
-import asyncErrorHandler from '~/middlewares/asyncErrorHandler';
 import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
 import { ChangePasswordRequest } from '~/dto/users/ChangePassword';
 import { ResetPasswordRequest } from '~/dto/users/ResetPassword';
@@ -18,7 +17,7 @@ const route = Router();
  * Path: users/
  * Method: GET
  */
-route.get('/', asyncErrorHandler(userController.findAll));
+route.get('/', userController.findAll);
 
 /**
  * Description: Register a new user.
@@ -28,7 +27,7 @@ route.get('/', asyncErrorHandler(userController.findAll));
 route.post(
   '/register',
   validateRequest(RegisterRequest),
-  asyncErrorHandler(userController.register)
+  userController.register
 );
 
 /**
@@ -36,11 +35,7 @@ route.post(
  * Path: users/login
  * Method: POST
  */
-route.post(
-  '/login',
-  validateRequest(LoginRequest),
-  asyncErrorHandler(userController.login)
-);
+route.post('/login', validateRequest(LoginRequest), userController.login);
 
 /**
  * Description: Refresh a user's token.
@@ -50,7 +45,7 @@ route.post(
 route.post(
   '/refresh-token',
   validateAuthorization(AuthorizationType.REFRESH_TOKEN),
-  asyncErrorHandler(userController.refreshToken)
+  userController.refreshToken
 );
 
 /**
@@ -61,7 +56,7 @@ route.post(
 route.post(
   '/logout',
   validateAuthorization(AuthorizationType.ACCESS_TOKEN_AND_REFRESH_TOKEN),
-  asyncErrorHandler(userController.logout)
+  userController.logout
 );
 
 /**
@@ -72,7 +67,7 @@ route.post(
 route.post(
   '/verify-email',
   validateAuthorization(AuthorizationType.VERIFY_EMAIL_TOKEN),
-  asyncErrorHandler(userController.verifyEmail)
+  userController.verifyEmail
 );
 
 /**
@@ -83,7 +78,7 @@ route.post(
 route.post(
   '/resend-verify-email',
   validateAuthorization(AuthorizationType.ACCESS_TOKEN),
-  asyncErrorHandler(userController.resendVerifyEmail)
+  userController.resendVerifyEmail
 );
 
 /**
@@ -94,7 +89,7 @@ route.post(
 route.post(
   '/forgot-password',
   validateRequest(ForgotPasswordRequest),
-  asyncErrorHandler(userController.forgotPassword)
+  userController.forgotPassword
 );
 
 /**
@@ -106,7 +101,7 @@ route.post(
   '/reset-password',
   validateAuthorization(AuthorizationType.FORGOT_PASSWORD_TOKEN),
   validateRequest(ResetPasswordRequest),
-  asyncErrorHandler(userController.resetPassword)
+  userController.resetPassword
 );
 
 /**
@@ -118,7 +113,7 @@ route.post(
   '/change-password',
   validateAuthorization(),
   validateRequest(ChangePasswordRequest),
-  asyncErrorHandler(userController.changePassword)
+  userController.changePassword
 );
 
 /**
@@ -126,18 +121,14 @@ route.post(
  * Path: users/me
  * Method: GET
  */
-route.get(
-  '/me',
-  validateAuthorization(),
-  asyncErrorHandler(userController.getMe)
-);
+route.get('/me', validateAuthorization(), userController.getMe);
 
 /**
  * Description: Get user's information.
  * Path: users/:userId
  * Method: GET
  */
-route.get('/:userId', asyncErrorHandler(userController.getProfile));
+route.get('/:userId', userController.getProfile);
 
 /**
  * Description: Change account's information.
@@ -148,7 +139,7 @@ route.patch(
   '/me',
   validateAuthorization(),
   validateRequest(UpdateMeRequest),
-  asyncErrorHandler(userController.updateMe)
+  userController.updateMe
 );
 
 /**
@@ -156,11 +147,7 @@ route.patch(
  * Path: users/:userId/follow
  * Method: POST
  */
-route.post(
-  '/:userId/follow',
-  validateAuthorization(),
-  asyncErrorHandler(userController.follow)
-);
+route.post('/:userId/follow', validateAuthorization(), userController.follow);
 
 /**
  * Description: Unfollow user.
@@ -170,7 +157,7 @@ route.post(
 route.delete(
   '/:userId/unfollow',
   validateAuthorization(),
-  asyncErrorHandler(userController.unfollow)
+  userController.unfollow
 );
 
 export default route;

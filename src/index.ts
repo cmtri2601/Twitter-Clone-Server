@@ -15,7 +15,7 @@ database.run().catch(console.dir);
 app.use(express.json());
 
 // handle route
-app.use(route);
+app.use('/api', route);
 
 // handle error
 app.use(errorHandler);

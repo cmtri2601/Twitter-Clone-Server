@@ -4,7 +4,7 @@ import { RefreshTokenEntity } from '~/models/schemas/RefreshToken.schema';
 import { UserEntity } from '~/models/schemas/User.schema';
 
 class DataBase {
-  private client;
+  public client;
   private db;
 
   constructor(uri: string, databaseName?: string) {

@@ -1,23 +1,24 @@
+import { isUndefined, omitBy } from 'lodash';
 import { ObjectId } from 'mongodb';
 import { HttpStatus } from '~/constants/HttpStatus';
 import { CommonMessage, UserMessage } from '~/constants/Message';
 import { TokenType } from '~/constants/TokenType';
 import { UserStatus } from '~/constants/UserStatus';
+import followerDao from '~/database/Follower.dao';
 import refreshTokenDao from '~/database/RefreshToken.dao';
 import userDao from '~/database/User.dao';
+import TestDecorator from '~/decorators/TestDecorator';
 import { ChangePasswordRequest } from '~/dto/users/ChangePassword';
 import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
 import { ResetPasswordRequest } from '~/dto/users/ResetPassword';
+import { UpdateMeRequest } from '~/dto/users/UpdateMe.dto';
+import { FollowerEntity } from '~/models/schemas/Followers.schema';
 import { RefreshTokenEntity } from '~/models/schemas/RefreshToken.schema';
 import { User, UserEntity } from '~/models/schemas/User.schema';
 import Authorization from '~/models/utils/Authorization';
 import { ApplicationError } from '~/models/utils/Error';
 import hash from '~/utils/crypto';
 import { sign, verify } from './../utils/jwt';
-import { UpdateMeRequest } from '~/dto/users/UpdateMe.dto';
-import { isUndefined, omitBy } from 'lodash';
-import followerDao from '~/database/Follower.dao';
-import { FollowerEntity } from '~/models/schemas/Followers.schema';
 
 class UserService {
   /**
@@ -33,7 +34,8 @@ class UserService {
    * @param user User
    * @returns access token && refreshToken
    */
-  public register = async (user: User) => {
+  @TestDecorator('test')
+  public async register(user: User) {
     // create id
     const _id = new ObjectId();
 
@@ -54,11 +56,18 @@ class UserService {
       ...user,
       _id,
       password: hashPassword,
+      status: UserStatus.UNVERIFIED,
       verifyEmailToken,
       createAt: currentISODate,
       updateAt: currentISODate
     });
     await userDao.insertUser(userEntity);
+
+    // throw new ApplicationError(
+    //   HttpStatus.INTERNAL_SERVER_ERROR,
+    //   CommonMessage.INTERNAL_SERVER_ERROR,
+    //   'abort transaction'
+    // );
 
     // create access and refresh token
     const tokens = await this.signAccessAndRefreshToken(
@@ -71,7 +80,7 @@ class UserService {
 
     // return
     return tokens;
-  };
+  }
 
   /**
    * Login user
