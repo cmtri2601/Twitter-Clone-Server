@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import { ClientSession, ObjectId } from 'mongodb';
 import { UserStatus } from '~/constants/UserStatus';
 import { UpdateMeRequest } from '~/dto/users/UpdateMe.dto';
 import { UserEntity } from '~/models/schemas/User.schema';
@@ -21,8 +21,8 @@ class UserDao {
     return await database.users.findOne({ email, password });
   }
 
-  public async insertUser(entity: UserEntity) {
-    return await database.users.insertOne(entity);
+  public async insertUser(entity: UserEntity, session?: ClientSession) {
+    return await database.users.insertOne(entity, { session });
   }
 
   public async updateVerifyEmailToken(

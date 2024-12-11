@@ -1,5 +1,5 @@
 import { isUndefined, omitBy } from 'lodash';
-import { ObjectId } from 'mongodb';
+import { ClientSession, ObjectId } from 'mongodb';
 import { HttpStatus } from '~/constants/HttpStatus';
 import { CommonMessage, UserMessage } from '~/constants/Message';
 import { TokenType } from '~/constants/TokenType';
@@ -7,7 +7,7 @@ import { UserStatus } from '~/constants/UserStatus';
 import followerDao from '~/database/Follower.dao';
 import refreshTokenDao from '~/database/RefreshToken.dao';
 import userDao from '~/database/User.dao';
-import TestDecorator from '~/decorators/TestDecorator';
+import Transactional from '~/decorators/Transactional';
 import { ChangePasswordRequest } from '~/dto/users/ChangePassword';
 import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
 import { ResetPasswordRequest } from '~/dto/users/ResetPassword';
@@ -34,8 +34,8 @@ class UserService {
    * @param user User
    * @returns access token && refreshToken
    */
-  @TestDecorator('test')
-  public async register(user: User) {
+  @Transactional
+  public async register(user: User, session?: ClientSession) {
     // create id
     const _id = new ObjectId();
 
@@ -61,18 +61,13 @@ class UserService {
       createAt: currentISODate,
       updateAt: currentISODate
     });
-    await userDao.insertUser(userEntity);
-
-    // throw new ApplicationError(
-    //   HttpStatus.INTERNAL_SERVER_ERROR,
-    //   CommonMessage.INTERNAL_SERVER_ERROR,
-    //   'abort transaction'
-    // );
+    await userDao.insertUser(userEntity, session);
 
     // create access and refresh token
     const tokens = await this.signAccessAndRefreshToken(
       _id,
-      UserStatus.UNVERIFIED
+      UserStatus.UNVERIFIED,
+      session
     );
 
     // TODO: send verify email - FAKE (replace with real send email later)
@@ -87,13 +82,11 @@ class UserService {
    * @param user User
    * @returns access token && refreshToken
    */
-  public login = async (
-    user: User
-  ): Promise<{
+  public async login(user: User): Promise<{
     errors?: UserMessage;
     accessToken?: string;
     refreshToken?: string;
-  }> => {
+  }> {
     // hash password
     const hashPassword = hash(user.password as string);
     user.password = hashPassword;
@@ -119,44 +112,53 @@ class UserService {
 
     // return
     return tokens;
-  };
+  }
 
   /**
    * Refresh token
    * @param authorization Authorization
    * @returns access token && refreshToken
    */
-  public refreshToken = async (authorization: Authorization) => {
+  @Transactional
+  public async refreshToken(
+    authorization: Authorization,
+    session?: ClientSession
+  ) {
     // delete old refresh token
-    await refreshTokenDao.deleteToken(authorization.refreshToken as string);
+    await refreshTokenDao.deleteToken(
+      authorization.refreshToken as string,
+      session
+    );
 
     // create jwt
     const tokens = await this.signAccessAndRefreshToken(
       authorization.userId as ObjectId,
-      authorization.status as UserStatus
+      authorization.status as UserStatus,
+      session,
+      authorization.exp as number
     );
 
     // return
     return tokens;
-  };
+  }
 
   /**
    * Logout user
    * @param authorization Authorization
    */
-  public logout = async (authorization: Authorization) => {
+  public async logout(authorization: Authorization) {
     // delete old refresh token
     return await refreshTokenDao.deleteToken(
       authorization.refreshToken as string
     );
-  };
+  }
 
   /**
    * Verify email token
    * @param authorization Authorization
    * @returns message
    */
-  public verifyEmail = async (authorization: Authorization) => {
+  public async verifyEmail(authorization: Authorization) {
     // check user is verified
     const isVerified = await this.isUserVerified(
       authorization.userId as ObjectId
@@ -175,14 +177,14 @@ class UserService {
 
     // return
     return UserMessage.VERIFY_EMAIL_TOKEN_SUCCESS;
-  };
+  }
 
   /**
    * Resend verify email
    * @param authorization Authorization
    * @returns message
    */
-  public resendVerifyEmail = async (authorization: Authorization) => {
+  public async resendVerifyEmail(authorization: Authorization) {
     // check user is verified
     const isVerified = await this.isUserVerified(
       authorization.userId as ObjectId
@@ -209,13 +211,13 @@ class UserService {
     console.log('Verify email token:', verifyEmailToken);
 
     return UserMessage.RESEND_VERIFY_EMAIL_TOKEN_SUCCESS;
-  };
+  }
 
   /**
    * Forgot password
    * @param body ForgotPasswordRequest
    */
-  public forgotPassword = async (body: ForgotPasswordRequest) => {
+  public async forgotPassword(body: ForgotPasswordRequest) {
     // create forgot password token
     const forgotPasswordToken = await this.signForgotPasswordToken(
       body.email as string
@@ -231,33 +233,33 @@ class UserService {
     console.log(
       `Please click to this link to reset password: http://localhost:3000/users/reset-password?token=${forgotPasswordToken}`
     );
-  };
+  }
 
   /**
    * Reset password
    * @param body ResetPasswordRequest
    * @param authorization Authorization
    */
-  public resetPassword = async (
+  public async resetPassword(
     body: ResetPasswordRequest,
     authorization: Authorization
-  ) => {
+  ) {
     // hash password
     const hashPassword = hash(body.password as string);
 
     // save token and password to database
     await userDao.resetPassword(authorization.userId as ObjectId, hashPassword);
-  };
+  }
 
   /**
    * Change password
    * @param body ChangePasswordRequest
    * @param authorization Authorization
    */
-  public changePassword = async (
+  public async changePassword(
     body: ChangePasswordRequest,
     authorization: Authorization
-  ) => {
+  ) {
     // hash old password
     const hashOldPassword = hash(body.oldPassword as string);
 
@@ -279,29 +281,29 @@ class UserService {
       authorization.userId as ObjectId,
       hashPassword
     );
-  };
+  }
 
   /**
    * Get account's information
    * @param authorization Authorization
    * @returns user information
    */
-  public getMe = async (authorization: Authorization) => {
+  public async getMe(authorization: Authorization) {
     const entity = await userDao.findById(authorization.userId as ObjectId);
     return new User(entity as UserEntity);
-  };
+  }
 
   /**
    * Get account's information
    * @param userId string (param)
    * @returns user information
    */
-  public getProfile = async (userId: string) => {
+  public async getProfile(userId: string) {
     // check user is existed
     const entity = await this.checkUserExisted(userId);
 
     return new User(entity as UserEntity);
-  };
+  }
 
   /**
    * Get account's information
@@ -309,10 +311,7 @@ class UserService {
    * @param authorization Authorization
    * @returns user after update
    */
-  public updateMe = async (
-    body: UpdateMeRequest,
-    authorization: Authorization
-  ) => {
+  public async updateMe(body: UpdateMeRequest, authorization: Authorization) {
     const userId = authorization.userId as ObjectId;
     // transform body to entity and remove undefined properties
     const updateEntity = omitBy(new UserEntity(body), isUndefined);
@@ -322,7 +321,7 @@ class UserService {
 
     // return
     return new User(entity as UserEntity);
-  };
+  }
 
   /**
    * Follow user
@@ -330,10 +329,7 @@ class UserService {
    * @param authorization Authorization
    * @returns
    */
-  public follow = async (
-    followedUserId: string,
-    authorization: Authorization
-  ) => {
+  public async follow(followedUserId: string, authorization: Authorization) {
     const userId = authorization.userId as ObjectId;
 
     // check followed user is existed
@@ -366,7 +362,7 @@ class UserService {
         followerId: followedUserEntity._id
       })
     );
-  };
+  }
 
   /**
    * Unfollow user
@@ -374,10 +370,7 @@ class UserService {
    * @param authorization Authorization
    * @returns
    */
-  public unfollow = async (
-    followedUserId: string,
-    authorization: Authorization
-  ) => {
+  public async unfollow(followedUserId: string, authorization: Authorization) {
     const userId = authorization.userId as ObjectId;
 
     // check followed user is existed
@@ -385,7 +378,7 @@ class UserService {
 
     // save to database
     await followerDao.delete(userId, followedUserEntity._id);
-  };
+  }
 
   /**
    * Find user by email and check email already exist
@@ -463,6 +456,7 @@ class UserService {
   private signAccessAndRefreshToken = async (
     userId: ObjectId,
     status: UserStatus,
+    session?: ClientSession,
     exp?: number
   ) => {
     // sign jwt
@@ -484,7 +478,7 @@ class UserService {
       iat: decoded.iat as number,
       exp: decoded.exp as number
     });
-    refreshTokenDao.insertRefreshToken(refreshTokenEntity);
+    refreshTokenDao.insertRefreshToken(refreshTokenEntity, session);
 
     // return
     return { accessToken, refreshToken };
