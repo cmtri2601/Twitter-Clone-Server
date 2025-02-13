@@ -435,8 +435,8 @@ class UserService {
     return exp
       ? sign(
           { userId, type: TokenType.RefreshToken, status, exp },
-          process.env.JWT_REFRESH_TOKEN_KEY as string,
-          { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as string }
+          process.env.JWT_REFRESH_TOKEN_KEY as string
+          // { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as string }
           // { expiresIn: '5s' } // TODO: for testing
         )
       : sign(

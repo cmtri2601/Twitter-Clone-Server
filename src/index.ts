@@ -3,12 +3,16 @@ import express from 'express';
 import 'reflect-metadata';
 import database from '~/database';
 import { errorHandler } from '~/middlewares/handleApplicationError';
+import morgan from '~/middlewares/morgan';
 import route from '~/routes';
 import corsOptions from './utils/Config/CorsOptions';
 
 // define variable
 const app = express();
 const port = process.env.PORT ?? 8080;
+
+// handle log
+app.use(morgan);
 
 // connect database
 database.run().catch(console.dir);
