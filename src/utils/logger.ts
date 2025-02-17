@@ -1,4 +1,6 @@
+import moment from 'moment';
 import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
 // Define your severity levels.
 // With them, You can create log files,
@@ -48,19 +50,33 @@ const format = winston.format.combine(
   )
 );
 
+// Allow to print all the error message inside the all.log file
+// (also the error log that are also printed inside the error.log(
+const applicationTransport = new DailyRotateFile({
+  filename: 'logs/%DATE%/application.log',
+  datePattern: 'DDMMYYYY',
+  zippedArchive: true,
+  maxSize: '5m',
+  maxFiles: '5d'
+});
+
+// Allow to print all the error level messages inside the error.log file
+const errorTransport = new DailyRotateFile({
+  level: 'error',
+  filename: 'logs/%DATE%/error.log',
+  datePattern: 'DDMMYYYY',
+  zippedArchive: true,
+  maxSize: '5m',
+  maxFiles: '5d'
+});
+
 // Define which transports the logger must use to print out messages.
 // In this example, we are using three different transports
 const transports = [
   // Allow the use the console to print the messages
   new winston.transports.Console(),
-  // Allow to print all the error level messages inside the error.log file
-  new winston.transports.File({
-    filename: 'logs/error.log',
-    level: 'error'
-  }),
-  // Allow to print all the error message inside the all.log file
-  // (also the error log that are also printed inside the error.log(
-  new winston.transports.File({ filename: 'logs/all.log' })
+  errorTransport,
+  applicationTransport
 ];
 
 // Create the logger instance that has to be exported
