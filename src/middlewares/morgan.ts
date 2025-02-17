@@ -23,9 +23,6 @@ const skip = () => {
 morgan.token('body', (req: Request, _) => {
   return JSON.stringify(req.body);
 });
-// morgan.token('res-body', (_, res: Response) => {
-//   return JSON.stringify(res.res.__custom_body__);
-// });
 
 // Build the morgan middleware
 const morganMiddleware = morgan(
