@@ -232,7 +232,7 @@ class UserService {
 
     // TODO: send verify email - FAKE (replace with real send email later)
     console.log(
-      `Please click to this link to reset password: http://localhost:3000/users/reset-password?token=${forgotPasswordToken}`
+      `Please click to this link to reset password: http://localhost:3000/reset-password?token=${forgotPasswordToken}`
     );
   }
 
