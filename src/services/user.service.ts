@@ -74,7 +74,7 @@ class UserService {
     console.log('Verify email token:', verifyEmailToken);
 
     // return
-    return tokens;
+    return { ...tokens, user: new User(userEntity) };
   }
 
   /**
@@ -86,6 +86,7 @@ class UserService {
     errors?: UserMessage;
     accessToken?: string;
     refreshToken?: string;
+    user?: User;
   }> {
     // hash password
     const hashPassword = hash(user.password as string);
@@ -111,7 +112,7 @@ class UserService {
     );
 
     // return
-    return tokens;
+    return { ...tokens, user: new User(userEntity) };
   }
 
   /**
@@ -478,7 +479,7 @@ class UserService {
       iat: decoded.iat as number,
       exp: decoded.exp as number
     });
-    refreshTokenDao.insertRefreshToken(refreshTokenEntity, session);
+    await refreshTokenDao.insertRefreshToken(refreshTokenEntity, session);
 
     // return
     return { accessToken, refreshToken };
