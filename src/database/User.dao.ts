@@ -17,6 +17,10 @@ class UserDao {
     return await database.users.findOne({ email });
   }
 
+  public async findByUsername(username: string) {
+    return await database.users.findOne({ username });
+  }
+
   public async findByEmailAndPassword(email: string, password: string) {
     return await database.users.findOne({ email, password });
   }

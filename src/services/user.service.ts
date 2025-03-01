@@ -392,6 +392,16 @@ class UserService {
   };
 
   /**
+   * Find user by username and check already exist
+   * @returns list users
+   */
+  public isUsernameAlreadyExist = async (username: string) => {
+    return userDao.findByUsername(username).then((user) => {
+      return !!user;
+    });
+  };
+
+  /**
    * Find user by userId
    * @returns list users
    */

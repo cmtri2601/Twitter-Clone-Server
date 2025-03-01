@@ -1,11 +1,11 @@
 import { ObjectId } from 'mongodb';
 import { UserStatus } from '~/constants/UserStatus';
-import { UpdateMeRequest } from '~/dto/users/UpdateMe.dto';
 
 export class User {
   _id?: ObjectId;
   email?: string;
   password?: string;
+  username?: string;
   firstName?: string;
   lastName?: string;
   status?: UserStatus;
@@ -28,6 +28,7 @@ export class User {
     this._id = user._id;
     this.email = user.email;
     // this.password = user.password;
+    this.username = user.username;
     this.firstName = user.first_name;
     this.lastName = user.last_name;
     this.status = user.status;
@@ -48,6 +49,7 @@ export class UserEntity {
   _id?: ObjectId;
   email?: string;
   password?: string;
+  username?: string;
   first_name?: string;
   last_name?: string;
   status?: UserStatus;
@@ -69,6 +71,7 @@ export class UserEntity {
     this._id = user._id;
     this.email = user.email;
     this.password = user.password;
+    this.username = user.username;
     this.first_name = user.firstName;
     this.last_name = user.lastName;
     this.status = user.status;

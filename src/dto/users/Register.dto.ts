@@ -8,12 +8,18 @@ import {
 } from 'class-validator';
 import { IsEmailAlreadyExist } from '~/decorators/IsEmailAlreadyExist';
 import { IsMatch } from '~/decorators/IsMatch';
+import { IsUsernameAlreadyExist } from '~/decorators/IsUsernameAlreadyExist';
 
 export class RegisterRequest {
   @Expose()
   @IsEmail()
   @IsEmailAlreadyExist()
   email?: string;
+
+  @Expose()
+  @MaxLength(40)
+  @IsUsernameAlreadyExist()
+  username?: string;
 
   @Expose()
   @MaxLength(30)
