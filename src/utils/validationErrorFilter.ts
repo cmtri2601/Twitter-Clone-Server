@@ -13,19 +13,22 @@ const filterValidationError = (
   // TODO: delete
   // console.log(errors);
 
+  // each detail is each property
   const result = errors.map((detail) => {
     let propertyErrors: any[] = [];
     let childErrors: any[] = [];
     const prefix = parent ? `${parent}.` : '';
 
-    // get error of properties of this instance first
+    // 1. propertyErrors
+    // get error message (prefix + constraint) of this property first
     if (detail.constraints) {
-      propertyErrors = Object.values(detail.constraints).map((constraint) => {
-        return prefix + constraint;
-      });
+      propertyErrors = Object.values(detail.constraints).map(
+        (constraint) => prefix + constraint
+      );
     }
 
-    // get error of properties of this instance first
+    // 2. childErrors
+    // get error message of children of this property next
     if (detail.children) {
       const childErrorArray = filterValidationError(
         detail.children,
@@ -34,7 +37,7 @@ const filterValidationError = (
       childErrors = [...childErrorArray];
     }
 
-    // return error
+    // return error [...1, ...2]
     return [...propertyErrors, ...childErrors];
   });
 

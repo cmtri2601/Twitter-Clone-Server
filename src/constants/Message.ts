@@ -36,3 +36,10 @@ export enum UserMessage {
   FOLLOW_SUCCESS = 'Follow successfully',
   UNFOLLOW_SUCCESS = 'Unfollow successfully'
 }
+
+export enum MediaMessage {
+  UPLOAD_IMAGES_SUCCESS = 'Upload images successfully',
+  INVALID_IMAGE_TYPE = 'File type is not valid',
+  INVALID_PROPERTY = 'File property is not valid',
+  EMPTY = 'File is empty'
+}

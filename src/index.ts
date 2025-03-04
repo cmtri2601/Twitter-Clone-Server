@@ -6,10 +6,14 @@ import { errorHandler } from '~/middlewares/handleApplicationError';
 import morgan from '~/middlewares/morgan';
 import route from '~/routes';
 import corsOptions from './utils/Config/CorsOptions';
+import { initFolder } from './utils/file';
 
 // define variable
 const app = express();
 const port = process.env.PORT ?? 8080;
+
+// init upload folder
+initFolder();
 
 // handle log
 app.use(morgan);
