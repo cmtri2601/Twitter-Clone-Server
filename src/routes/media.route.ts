@@ -21,6 +21,6 @@ route.post(
  * Path: users/:userId
  * Method: GET
  */
-route.get('/image/:name', validateAuthorization(), mediaController.getImage);
+route.get('/image/:name', mediaController.getImage);
 
 export default route;

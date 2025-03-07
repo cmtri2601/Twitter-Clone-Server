@@ -299,10 +299,9 @@ class UserService {
    * @param userId string (param)
    * @returns user information
    */
-  public async getProfile(userId: string) {
+  public async getProfile(username: string) {
     // check user is existed
-    const entity = await this.checkUserExisted(userId);
-
+    const entity = await this.checkUserExistedByUsername(username);
     return new User(entity as UserEntity);
   }
 
@@ -334,7 +333,7 @@ class UserService {
     const userId = authorization.userId as ObjectId;
 
     // check followed user is existed
-    const followedUserEntity = await this.checkUserExisted(followedUserId);
+    const followedUserEntity = await this.checkUserExistedById(followedUserId);
 
     // check followed user is not current user
     if (followedUserEntity._id.equals(userId)) {
@@ -375,7 +374,7 @@ class UserService {
     const userId = authorization.userId as ObjectId;
 
     // check followed user is existed
-    const followedUserEntity = await this.checkUserExisted(followedUserId);
+    const followedUserEntity = await this.checkUserExistedById(followedUserId);
 
     // save to database
     await followerDao.delete(userId, followedUserEntity._id);
@@ -415,6 +414,50 @@ class UserService {
    */
   public findUserByEmail = async (email: string) => {
     return userDao.findByEmail(email);
+  }; /**
+   * Check whether user is verified or not
+   * @returns list users
+   */
+  public isUserVerified = async (userId: ObjectId) => {
+    return userDao.findById(userId).then((user) => {
+      return !user?.verify_email_token;
+    });
+  };
+
+  /**
+   * Check whether user is existed or not by id
+   * @returns if don't exist, throw error
+   */
+  public checkUserExistedById = async (userId: string) => {
+    const entity = await userDao.findById(new ObjectId(userId));
+
+    if (!entity) {
+      throw new ApplicationError(
+        HttpStatus.NOT_FOUND,
+        CommonMessage.NOT_FOUND,
+        UserMessage.USER_NOT_EXISTED
+      );
+    }
+
+    return entity;
+  };
+
+  /**
+   * Check whether user is existed or not by username
+   * @returns if don't exist, throw error
+   */
+  public checkUserExistedByUsername = async (username: string) => {
+    const entity = await userDao.findByUsername(username);
+
+    if (!entity) {
+      throw new ApplicationError(
+        HttpStatus.NOT_FOUND,
+        CommonMessage.NOT_FOUND,
+        UserMessage.USER_NOT_EXISTED
+      );
+    }
+
+    return entity;
   };
 
   /**
@@ -523,34 +566,6 @@ class UserService {
       { expiresIn: process.env.JWT_FORGOT_PASSWORD_TOKEN_EXPIRES_IN as string }
       // { expiresIn: '5s' } // TODO: for testing
     );
-  };
-
-  /**
-   * Check whether user is verified or not
-   * @returns list users
-   */
-  public isUserVerified = async (userId: ObjectId) => {
-    return userDao.findById(userId).then((user) => {
-      return !user?.verify_email_token;
-    });
-  };
-
-  /**
-   * Check whether user is existed or not
-   * @returns if don't exist, throw error
-   */
-  public checkUserExisted = async (userId: string) => {
-    const entity = await userDao.findById(new ObjectId(userId));
-
-    if (!entity) {
-      throw new ApplicationError(
-        HttpStatus.NOT_FOUND,
-        CommonMessage.NOT_FOUND,
-        UserMessage.USER_NOT_EXISTED
-      );
-    }
-
-    return entity;
   };
 }
 

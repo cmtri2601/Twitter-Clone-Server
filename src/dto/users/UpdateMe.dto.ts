@@ -1,5 +1,11 @@
-import { Expose } from 'class-transformer';
-import { IsDateString, IsOptional, MaxLength } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import {
+  IsDateString,
+  IsOptional,
+  MaxLength,
+  ValidateNested
+} from 'class-validator';
+import { Media } from '../Media';
 
 export class UpdateMeRequest {
   @Expose()
@@ -34,8 +40,9 @@ export class UpdateMeRequest {
 
   @Expose()
   @IsOptional()
-  @MaxLength(200)
-  avatar?: string;
+  @ValidateNested()
+  @Type(() => Media)
+  avatar?: Media;
 
   @Expose()
   @IsOptional()

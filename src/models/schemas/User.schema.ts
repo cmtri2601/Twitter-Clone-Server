@@ -1,5 +1,7 @@
 import { ObjectId } from 'mongodb';
+import { MediaType } from '~/constants/MediaType';
 import { UserStatus } from '~/constants/UserStatus';
+import { Media } from '~/models/utils/Media';
 
 export class User {
   _id?: ObjectId;
@@ -20,7 +22,7 @@ export class User {
   location?: string;
   website?: string;
   dateOfBirth?: string;
-  avatar?: string;
+  avatar?: Media;
   coverPhoto?: string;
 
   // don't expose sensitive information to the client
@@ -40,7 +42,7 @@ export class User {
     this.location = user.location;
     this.website = user.website;
     this.dateOfBirth = user.day_of_birth?.toISOString();
-    this.avatar = user.avatar;
+    this.avatar = new Media(user.avatar, MediaType.IMAGE);
     this.coverPhoto = user.cover_photo;
   }
 }
@@ -85,7 +87,7 @@ export class UserEntity {
     this.day_of_birth = user.dateOfBirth
       ? new Date(user.dateOfBirth)
       : undefined;
-    this.avatar = user.avatar;
+    this.avatar = user.avatar?.url;
     this.cover_photo = user.coverPhoto;
   }
 }

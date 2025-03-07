@@ -128,7 +128,7 @@ route.get('/me', validateAuthorization(), userController.getMe);
  * Path: users/:userId
  * Method: GET
  */
-route.get('/:userId', userController.getProfile);
+route.get('/:username', userController.getProfile);
 
 /**
  * Description: Change account's information.
