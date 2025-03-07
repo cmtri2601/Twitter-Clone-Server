@@ -176,7 +176,10 @@ class UserController {
    */
   @AsyncErrorWrapper
   public async getProfile(req: Request, res: Response) {
-    const data = await userService.getProfile(req.params.username);
+    const data = await userService.getProfile(
+      req.params.username,
+      req.authorization
+    );
     const response = new ApplicationResponse({
       message: CommonMessage.SUCCESS,
       data

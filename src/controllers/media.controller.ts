@@ -32,7 +32,6 @@ class MediaController {
   public async getImage(req: Request, res: Response) {
     const { name } = req.params;
     const imagePath = path.join(UPLOAD_IMAGES_DIR, name) + '.jpg';
-    console.log(imagePath);
     res.sendFile(imagePath, (err) => {
       if (err) {
         res

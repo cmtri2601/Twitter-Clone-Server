@@ -73,7 +73,7 @@ class UserDao {
     );
   }
 
-  public async update(_id: ObjectId, user: UpdateMeRequest) {
+  public async update(_id: ObjectId, user: UserEntity) {
     return await database.users.findOneAndUpdate(
       { _id },
       {

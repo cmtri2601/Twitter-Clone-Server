@@ -11,10 +11,10 @@ import userService from '~/services/user.service';
 export class IsUsernameAlreadyExistConstraint
   implements ValidatorConstraintInterface
 {
-  async validate(email: any, args: ValidationArguments) {
+  async validate(username: any, args: ValidationArguments) {
     const [expect] = args.constraints;
     const isUsernameAlreadyExist =
-      await userService.isUsernameAlreadyExist(email);
+      await userService.isUsernameAlreadyExist(username);
     return expect ? isUsernameAlreadyExist : !isUsernameAlreadyExist;
   }
 

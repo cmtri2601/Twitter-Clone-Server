@@ -10,9 +10,6 @@ const filterValidationError = (
   errors: ValidationError[],
   parent: string = ''
 ): any[] => {
-  // TODO: delete
-  // console.log(errors);
-
   // each detail is each property
   const result = errors.map((detail) => {
     let propertyErrors: any[] = [];

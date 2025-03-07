@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { AuthorizationType } from '~/constants/AuthorizationType';
 import userController from '~/controllers/user.controller';
+import { ChangePasswordRequest } from '~/dto/users/ChangePassword';
+import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
 import { LoginRequest } from '~/dto/users/Login.dto';
 import { RegisterRequest } from '~/dto/users/Register.dto';
-import validateAuthorization from '~/middlewares/validateAuthorization';
-import validateRequest from '~/middlewares/validateRequest';
-import { ForgotPasswordRequest } from '~/dto/users/ForgotPassword';
-import { ChangePasswordRequest } from '~/dto/users/ChangePassword';
 import { ResetPasswordRequest } from '~/dto/users/ResetPassword';
 import { UpdateMeRequest } from '~/dto/users/UpdateMe.dto';
+import validateAuthorization from '~/middlewares/validateAuthorization';
+import validateRequest from '~/middlewares/validateRequest';
 
 const route = Router();
 
@@ -121,14 +121,18 @@ route.post(
  * Path: users/me
  * Method: GET
  */
-route.get('/me', validateAuthorization(), userController.getMe);
+route.get(
+  '/me',
+  validateAuthorization(AuthorizationType.ACCESS_TOKEN),
+  userController.getMe
+);
 
 /**
  * Description: Get user's information.
  * Path: users/:userId
  * Method: GET
  */
-route.get('/:username', userController.getProfile);
+route.get('/:username', validateAuthorization(), userController.getProfile);
 
 /**
  * Description: Change account's information.

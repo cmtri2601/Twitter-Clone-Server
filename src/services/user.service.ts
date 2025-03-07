@@ -296,13 +296,27 @@ class UserService {
 
   /**
    * Get account's information
-   * @param userId string (param)
+   * @param userId string (authorization)
+   * @param username string (param)
    * @returns user information
    */
-  public async getProfile(username: string) {
+  public async getProfile(username: string, authorization: Authorization) {
     // check user is existed
     const entity = await this.checkUserExistedByUsername(username);
-    return new User(entity as UserEntity);
+
+    // if don't have access token, or same user => these variable = undefined
+    let isFollow, isFollowed;
+
+    const _id = authorization.userId as ObjectId;
+    if (!entity._id.equals(_id)) {
+      // check already followed
+      isFollow = Boolean(await followerDao.findFollower(_id, entity._id));
+
+      // check already be followed
+      isFollowed = Boolean(await followerDao.findFollower(entity._id, _id));
+    }
+
+    return { ...new User(entity as UserEntity), isFollow, isFollowed };
   }
 
   /**
@@ -396,6 +410,16 @@ class UserService {
    */
   public isUsernameAlreadyExist = async (username: string) => {
     return userDao.findByUsername(username).then((user) => {
+      return !!user;
+    });
+  };
+
+  /**
+   * Find user by username and check already exist
+   * @returns list users
+   */
+  public isUserIdAlreadyExist = async (userId: string) => {
+    return userDao.findById(new ObjectId(userId)).then((user) => {
       return !!user;
     });
   };
