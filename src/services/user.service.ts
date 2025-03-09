@@ -19,6 +19,8 @@ import Authorization from '~/models/utils/Authorization';
 import { ApplicationError } from '~/models/utils/Error';
 import hash from '~/utils/crypto';
 import { sign, verify } from './../utils/jwt';
+import axios from 'axios';
+import { Media } from '~/models/utils/Media';
 
 class UserService {
   /**
@@ -103,6 +105,53 @@ class UserService {
       return {
         errors: UserMessage.LOGIN_FAIL
       };
+    }
+
+    // create jwt
+    const tokens = await this.signAccessAndRefreshToken(
+      userEntity._id,
+      userEntity.status as UserStatus
+    );
+
+    // return
+    return { ...tokens, user: new User(userEntity) };
+  }
+
+  /**
+   * Login user with google oath
+   * @param user User
+   * @returns access token && refreshToken
+   */
+  public async loginGoogle(query: { code: string }): Promise<{
+    errors?: UserMessage;
+    accessToken?: string;
+    refreshToken?: string;
+    user?: User;
+  }> {
+    const token = await this.getGoogleToken(query.code);
+    console.log('tokenData', token);
+
+    const user = await this.getGoogleUser(token);
+    console.log('userData', user);
+
+    // // hash password
+    // const hashPassword = hash(user.password as string);
+    // user.password = hashPassword;
+
+    // find user
+    const userEntity = await userDao.findByEmail(user.email as string);
+
+    // check user - if not exist register one and return
+    if (!userEntity) {
+      const newUser: User = {
+        email: user.email,
+        username: user.sub,
+        firstName: user.given_name,
+        lastName: user.family_name,
+        password: '123456@pQ', // default password
+        avatar: new Media(user.picture)
+      };
+      return await this.register(newUser);
     }
 
     // create jwt
@@ -590,6 +639,54 @@ class UserService {
       { expiresIn: process.env.JWT_FORGOT_PASSWORD_TOKEN_EXPIRES_IN as string }
       // { expiresIn: '5s' } // TODO: for testing
     );
+  };
+
+  /**
+   * Get google token
+   * @param code
+   * @returns Promise<data> contains token
+   */
+  private getGoogleToken = async (code: string) => {
+    const body = {
+      code,
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
+      redirect_uri: process.env.REDIRECT_URIS,
+      grant_type: 'authorization_code'
+    };
+
+    const { data } = await axios.post(process.env.TOKEN_URI as string, body, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    return data;
+  };
+
+  /**
+   * User google token to get google user
+   * @param code
+   * @returns Promise<data> contains token
+   */
+  private getGoogleUser = async (token: {
+    access_token: string;
+    id_token: string;
+  }) => {
+    const { data } = await axios.get(
+      'https://www.googleapis.com/oauth2/v3/userinfo',
+      {
+        params: {
+          access_token: token.access_token,
+          alt: 'json'
+        },
+        headers: {
+          Authorization: `Bearer ${token.id_token}`
+        }
+      }
+    );
+
+    return data;
   };
 }
 

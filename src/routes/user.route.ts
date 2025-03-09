@@ -38,6 +38,13 @@ route.post(
 route.post('/login', validateRequest(LoginRequest), userController.login);
 
 /**
+ * Description: Log in a user with google oauth.
+ * Path: users/oauth/google
+ * Method: POST
+ */
+route.get('/oauth/google', userController.loginGoogle);
+
+/**
  * Description: Refresh a user's token.
  * Path: users/refresh-token
  * Method: POST

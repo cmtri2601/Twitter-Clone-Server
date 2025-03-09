@@ -58,6 +58,19 @@ class UserController {
   }
 
   /**
+   * Login  user with google oauth.
+   * @returns A promise that resolves to the logged in user
+   */
+  @AsyncErrorWrapper
+  public async loginGoogle(req: Request, res: Response) {
+    const data = await userService.loginGoogle(req.query as { code: string });
+
+    res.redirect(
+      `${process.env.CLIENT_URL}/oauth/google?access_token=${data.accessToken}&refresh_token=${data.refreshToken}&user=${JSON.stringify(data.user)}` as string
+    );
+  }
+
+  /**
    * Refreshes user's token.
    * @returns A promise that resolves to the refreshed token.
    */
