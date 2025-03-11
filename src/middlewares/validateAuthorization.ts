@@ -26,7 +26,7 @@ const validateAuthorization = (
     switch (type) {
       case AuthorizationType.VERIFIED_USER: {
         authorization = await validateAccessToken(req);
-        validateVerifiedUser(authorization);
+        await validateVerifiedUser(authorization);
         break;
       }
       case AuthorizationType.ACCESS_TOKEN: {
@@ -64,16 +64,25 @@ const validateAuthorization = (
 
 /**
  * Validate is user verified
- * @param authorization contain user status
+ * @param authorization
  * @returns authorization object
  */
-const validateVerifiedUser = (authorization?: Authorization) => {
-  if (!authorization || authorization.status !== UserStatus.VERIFIED) {
-    throw new ApplicationError(
-      HttpStatus.FORBIDDEN,
-      CommonMessage.FORBIDDEN,
-      UserMessage.USER_IS_NOT_VERIFIED
+const validateVerifiedUser = async (authorization?: Authorization) => {
+  // TODO: use mongo db to check status of user => future use redis
+  try {
+    const entity = await userService.findUserById(
+      authorization?.userId as ObjectId
     );
+
+    if (entity?.status !== UserStatus.VERIFIED) {
+      throw new ApplicationError(
+        HttpStatus.FORBIDDEN,
+        CommonMessage.FORBIDDEN,
+        UserMessage.USER_IS_NOT_VERIFIED
+      );
+    }
+  } catch (error) {
+    catchError(error);
   }
 };
 
@@ -98,15 +107,14 @@ const validateAccessToken = async (
       );
     }
 
-    const { userId, status } = await verify(
+    const { userId } = await verify(
       accessToken as string,
       process.env.JWT_ACCESS_TOKEN_KEY as string
     );
 
     // case: access token is valid -> set value to authorization object
     return new Authorization({
-      userId: new ObjectId(userId as string),
-      status
+      userId: new ObjectId(userId as string)
     });
   } catch (error) {
     catchError(error);
@@ -154,7 +162,6 @@ const validateRefreshToken = async (
     return new Authorization({
       refreshToken,
       userId: new ObjectId(decoded.userId as string),
-      status: decoded.status,
       exp: decoded.exp
     });
   } catch (error) {
@@ -184,7 +191,7 @@ const validateVerifyEmailToken = async (
     }
 
     // decode verify email token
-    const { userId, status } = await verify(
+    const { userId } = await verify(
       verifyEmailToken as string,
       process.env.JWT_VERIFY_EMAIL_TOKEN_KEY as string
     );
@@ -217,8 +224,7 @@ const validateVerifyEmailToken = async (
 
     // case: verify email token is valid -> set value to authorization object
     return new Authorization({
-      userId: new ObjectId(userId as string),
-      status
+      userId: new ObjectId(userId as string)
     });
   } catch (error) {
     catchError(error);

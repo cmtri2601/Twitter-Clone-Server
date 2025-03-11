@@ -66,11 +66,7 @@ class UserService {
     await userDao.insertUser(userEntity, session);
 
     // create access and refresh token
-    const tokens = await this.signAccessAndRefreshToken(
-      _id,
-      UserStatus.UNVERIFIED,
-      session
-    );
+    const tokens = await this.signAccessAndRefreshToken(_id, session);
 
     // TODO: send verify email - FAKE (replace with real send email later)
     console.log('Verify email token:', verifyEmailToken);
@@ -108,10 +104,7 @@ class UserService {
     }
 
     // create jwt
-    const tokens = await this.signAccessAndRefreshToken(
-      userEntity._id,
-      userEntity.status as UserStatus
-    );
+    const tokens = await this.signAccessAndRefreshToken(userEntity._id);
 
     // return
     return { ...tokens, user: new User(userEntity) };
@@ -155,10 +148,7 @@ class UserService {
     }
 
     // create jwt
-    const tokens = await this.signAccessAndRefreshToken(
-      userEntity._id,
-      userEntity.status as UserStatus
-    );
+    const tokens = await this.signAccessAndRefreshToken(userEntity._id);
 
     // return
     return { ...tokens, user: new User(userEntity) };
@@ -183,7 +173,6 @@ class UserService {
     // create jwt
     const tokens = await this.signAccessAndRefreshToken(
       authorization.userId as ObjectId,
-      authorization.status as UserStatus,
       session,
       authorization.exp as number
     );
@@ -536,12 +525,11 @@ class UserService {
   /**
    * Create access token from payload
    * @param user
-   * @param status
    * @returns Promise<string> token
    */
-  private signAccessToken = (userId: ObjectId, status: UserStatus) => {
+  private signAccessToken = (userId: ObjectId) => {
     return sign(
-      { userId, type: TokenType.AccessToken, status },
+      { userId, type: TokenType.AccessToken },
       process.env.JWT_ACCESS_TOKEN_KEY as string,
       { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN as string }
       // { expiresIn: '5s' } // TODO: for testing
@@ -554,20 +542,16 @@ class UserService {
    * @param status
    * @returns Promise<string> token
    */
-  private signRefreshToken = (
-    userId: ObjectId,
-    status: UserStatus,
-    exp?: number
-  ) => {
+  private signRefreshToken = (userId: ObjectId, exp?: number) => {
     return exp
       ? sign(
-          { userId, type: TokenType.RefreshToken, status, exp },
+          { userId, type: TokenType.RefreshToken, exp },
           process.env.JWT_REFRESH_TOKEN_KEY as string
           // { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as string }
           // { expiresIn: '5s' } // TODO: for testing
         )
       : sign(
-          { userId, type: TokenType.RefreshToken, status },
+          { userId, type: TokenType.RefreshToken },
           process.env.JWT_REFRESH_TOKEN_KEY as string,
           { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as string }
           // { expiresIn: '5s' } // TODO: for testing
@@ -582,14 +566,13 @@ class UserService {
    */
   private signAccessAndRefreshToken = async (
     userId: ObjectId,
-    status: UserStatus,
     session?: ClientSession,
     exp?: number
   ) => {
     // sign jwt
     const [accessToken, refreshToken] = await Promise.all([
-      this.signAccessToken(userId, status),
-      this.signRefreshToken(userId, status, exp)
+      this.signAccessToken(userId),
+      this.signRefreshToken(userId, exp)
     ]);
 
     // decode to get iat and exp
